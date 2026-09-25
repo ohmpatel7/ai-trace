@@ -1,0 +1,30 @@
+{
+  "name": "ai-trace",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "AI Trace: a Lane 2 AI-use workspace for students and a Process Visualiser for graders. INFOMGMT 399 Team 12 prototype.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "seed": "tsx scripts/seed.ts",
+    "test": "vitest run",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.2.0",
+    "next": "^15.5.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}
