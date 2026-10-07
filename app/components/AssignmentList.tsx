@@ -41,7 +41,7 @@ export function AssignmentList({ viewer, mode }: { viewer: User; mode: "assignme
                   <span>Lane 2: AI permitted</span>
                   <span>Due {formatDateTime(a.due_at)}</span>
                   <span className={`chip plain${submitted ? " tier-green" : ""}`}>{submitted ? `Work submitted ${formatDateTime(submission!.submitted_at)}` : "Work not yet submitted"}</span>
-                  <span>{plural(steps, "AI step")} logged of {a.expected_min_iterations} expected</span>
+                  <span>{plural(steps, "AI step")} logged</span>
                 </div>
               </div>
               <span className="btn small">

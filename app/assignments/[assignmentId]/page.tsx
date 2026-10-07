@@ -36,7 +36,7 @@ export default async function AssignmentPage({ params }: { params: Promise<{ ass
         <p className="reading" style={{ margin: "10px 0 4px" }}>{assignment.instructions}</p>
       </details>
       <div className="card" style={{ marginBottom: 16 }}>
-        <strong>{plural(steps, "AI step")} logged in AI Trace</strong> of {assignment.expected_min_iterations} expected.{" "}
+        <strong>{plural(steps, "AI step")} logged in AI Trace.</strong>{" "}
         {submitted ? (
           <Link href={`/ai-trace/${assignment.id}/workspace`}>View your AI-use log</Link>
         ) : (
@@ -51,7 +51,7 @@ export default async function AssignmentPage({ params }: { params: Promise<{ ass
           <p className="reading" style={{ whiteSpace: "pre-wrap", margin: 0 }}>{submission!.final_text}</p>
         </div>
       ) : (
-        <SubmitWorkForm assignmentId={assignment.id} steps={steps} expectedMin={assignment.expected_min_iterations} />
+        <SubmitWorkForm assignmentId={assignment.id} />
       )}
     </>
   );

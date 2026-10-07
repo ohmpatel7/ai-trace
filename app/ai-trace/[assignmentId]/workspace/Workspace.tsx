@@ -39,7 +39,7 @@ export function Workspace({ assignment, initial }: { assignment: Assignment; ini
       <div className="card" style={{ marginBottom: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
           <div>
-            <strong>{plural(iterations.length, "step")} logged</strong> of {assignment.expected_min_iterations} expected.{" "}
+            <strong>{plural(iterations.length, "step")} logged.</strong>{" "}
             {locked ? (
               <span>Work submitted {formatDateTime(submission.submitted_at)}; this log is locked.</span>
             ) : (

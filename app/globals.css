@@ -2,7 +2,7 @@
    surfaces, a deep green accent, soft rounded cards. Text the user reads
    (drafts, AI output, critiques) is serif; interface chrome is sans-serif. */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   --bg: #f7f7f5;
   --surface: #ffffff;
   --surface-soft: #f1f2ef;
@@ -29,17 +29,6 @@
   --sidebar: 200px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #131714; --surface: #1b201c; --surface-soft: #222823; --line: #303732; --line-strong: #4a534c;
-    --text: #e9ece8; --muted: #a3aba4; --accent: #9fc8b6; --accent-soft: #24352e; --accent-text: #0f1a15; --focus: #7fb0ff;
-    --tier-green-bg: #1d3526; --tier-green-fg: #b4e2c3; --tier-green-line: #3e7a54;
-    --tier-amber-bg: #3b2f12; --tier-amber-fg: #f0d28a; --tier-amber-line: #8a6b22;
-    --tier-red-bg: #3d1f1b; --tier-red-fg: #f2b3a8; --tier-red-line: #8d4a41;
-    --hl-1: #5a4a12; --hl-2: #1f3d52; --hl-3: #3a2f5c; --hl-4: #1f4428; --hl-5: #5a2f24; --hl-6: #4a4630;
-    --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  }
-}
 
 * { box-sizing: border-box; }
 html, body { margin: 0; min-height: 100%; }

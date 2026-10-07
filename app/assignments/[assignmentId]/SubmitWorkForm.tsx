@@ -4,9 +4,8 @@ import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { submitWork } from "@/app/ai-trace/actions";
 import { countWords } from "@/lib/overlap";
-import { plural } from "@/lib/format";
 
-export function SubmitWorkForm({ assignmentId, steps, expectedMin }: { assignmentId: number; steps: number; expectedMin: number }) {
+export function SubmitWorkForm({ assignmentId }: { assignmentId: number }) {
   const [text, setText] = useState("");
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
@@ -36,9 +35,6 @@ export function SubmitWorkForm({ assignmentId, steps, expectedMin }: { assignmen
         <textarea className="reading" rows={16} value={text} onChange={(e) => setText(e.target.value)} placeholder="Paste your finished work here." />
       </label>
       <div className="status-line" style={{ margin: "6px 0 12px" }}>{countWords(text)} words.</div>
-      {steps < expectedMin && (
-        <p className="cue warn">You have logged {plural(steps, "AI step")} in AI Trace; {expectedMin} are expected. You can still submit, but the grader will see the gap, and the log locks once you do.</p>
-      )}
       {error && <p className="cue warn" role="alert">{error}</p>}
       <button type="button" className="btn primary" disabled={pending || !text.trim()} onClick={() => confirmRef.current?.showModal()}>
         Submit
