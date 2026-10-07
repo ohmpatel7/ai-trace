@@ -13,6 +13,6 @@ export interface Submission {
 }
 export interface Iteration {
   id: number; submission_id: number; seq: number; tool_name: string; prompt: string; ai_output: string; critique: string;
-  action: StepAction; action_note: string; created_at: string; updated_at: string;
+  action: StepAction; action_note: string; stage: string; scenario_tag: string; created_at: string; updated_at: string;
 }
 export interface GraderReview { submission_id: number; grader_id: number; reviewed: number; note: string; updated_at: string }

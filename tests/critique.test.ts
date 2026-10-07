@@ -23,9 +23,9 @@ describe("critiqueLabel", () => {
 describe("summariseCritiques", () => {
   it("reports critique depth as the median word count", () => {
     const summary = summariseCritiques([
-      { id: 1, seq: 1, critique: "", action: "accepted" },
-      { id: 2, seq: 2, critique: "four words right here", action: "edited" },
-      { id: 3, seq: 3, critique: fifteen, action: "edited" },
+      { id: 1, seq: 1, prompt: "one two", critique: "", action: "accepted", action_note: "" },
+      { id: 2, seq: 2, prompt: "one two", critique: "four words right here", action: "edited", action_note: "done" },
+      { id: 3, seq: 3, prompt: "one two", critique: fifteen, action: "edited", action_note: "" },
     ]);
     expect(summary.depth).toBe(4);
     expect(summary.counts).toEqual({ no_critique: 1, accepted_without_evaluation: 0, thin_critique: 1, substantive_critique: 1 });

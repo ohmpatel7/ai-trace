@@ -36,7 +36,9 @@ export default async function ClassViewPage({ params }: { params: Promise<{ assi
   const stepCounts = submitted.map((r) => r.stepCount);
   const medianSteps = median(stepCounts);
   const tierCounts = { green: 0, amber: 0, red: 0 };
-  for (const r of submitted) tierCounts[r.analysis!.tier] += 1;
+  const withWork = submitted.filter((r) => r.analysis!.totalWords > 0);
+  for (const r of withWork) tierCounts[r.analysis!.tier] += 1;
+  const withoutWork = submitted.length - withWork.length;
   const reviewed = submitted.filter((r) => r.review?.reviewed);
 
   // Critique labels across every logged step in the class, each traceable to its step.
@@ -94,9 +96,10 @@ export default async function ClassViewPage({ params }: { params: Promise<{ assi
             <span>Read the process closely · Worth a closer read · Mostly own wording</span>
           </summary>
           <div className="expand">
+            {withoutWork > 0 && <p className="muted" style={{ margin: "0 0 6px" }}>{plural(withoutWork, "submission")} with no submitted work on file, so no tier.</p>}
             <ul>
               {(["red", "amber", "green"] as const).map((tier) =>
-                submitted.filter((r) => r.analysis!.tier === tier).map((r) => (
+                withWork.filter((r) => r.analysis!.tier === tier).map((r) => (
                   <li key={r.student.id}>
                     <Link href={`${base}/${r.submission!.id}`}>{r.student.name}</Link>: <TierChip tier={tier} pct={r.analysis!.overlapPct} />
                   </li>

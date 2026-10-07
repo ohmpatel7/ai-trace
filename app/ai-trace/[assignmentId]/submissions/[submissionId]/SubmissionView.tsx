@@ -32,7 +32,7 @@ export function SubmissionView({ submission, iterations, analysis }: { submissio
     <div className="two-col">
       <section className="card" aria-labelledby="final-heading">
         <h2 id="final-heading">Submitted work</h2>
-        <HighlightedText text={submission.final_text} spans={analysis.spans} sources={sources} activeSourceId={activeStep} onSelect={openStep} emptyMessage="The submitted work is empty." />
+        <HighlightedText text={submission.final_text} spans={analysis.spans} sources={sources} activeSourceId={activeStep} onSelect={openStep} emptyMessage="No submitted work is on file for this student. The team dataset records the AI-use log only, so overlap highlights cannot be shown here." />
         <HighlightLegend sources={sources} tools={tools} />
       </section>
       <section aria-labelledby="record-heading">
@@ -49,6 +49,7 @@ export function SubmissionView({ submission, iterations, analysis }: { submissio
                 <summary>
                   <span className={`seq hl-${colourForSeq(it.seq)}`}>{it.seq}</span>
                   <span className="tool">{it.tool_name}</span>
+                  {it.stage && <span className="chip plain">{it.stage}</span>}
                   <span className="chip plain">{ACTION_LABELS[it.action]}</span>
                   <CritiqueChip label={crit.label} words={crit.words} />
                   <span className="spacer" />

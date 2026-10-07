@@ -49,8 +49,12 @@ export default async function SubmissionPage({ params }: { params: Promise<{ ass
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="stats-row">
           <div className="stat">
-            <TierChip tier={analysis.tier} pct={analysis.overlapPct} />
-            <span>{analysis.coveredWords} of {analysis.totalWords} words match a logged AI output</span>
+            <TierChip tier={analysis.tier} pct={analysis.overlapPct} totalWords={analysis.totalWords} />
+            <span>{analysis.totalWords === 0 ? "overlap needs the submitted work, which is not on file" : `${analysis.coveredWords} of ${analysis.totalWords} words match a logged AI output`}</span>
+          </div>
+          <div className="stat">
+            <strong>{analysis.critique.logged.studentShare === null ? "–" : `${Math.round(analysis.critique.logged.studentShare * 100)}%`}</strong>
+            <span>logged student share: {analysis.critique.logged.studentWords} student words vs {analysis.critique.logged.aiWords} AI words in the log</span>
           </div>
           <div className="stat">
             <strong>{iterations.length} of {assignment.expected_min_iterations}</strong>
@@ -67,7 +71,8 @@ export default async function SubmissionPage({ params }: { params: Promise<{ ass
         </div>
         <p className="small muted" style={{ margin: "0 0 10px" }}>
           A run of {config.n} or more words matching a logged AI output counts as reused. Each highlighted passage below opens the step it came from.
-          Reusing AI wording is permitted in Lane 2; the highlights show where to read the student's critique.
+          Reusing AI wording is permitted in Lane 2; the highlights show where to read the student's critique. Logged student share counts the words the student
+          wrote in the log (prompt, critique, action) against the AI's words. It measures volume only, not authorship, quality or a grade.
         </p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
           <SettingsPanel />

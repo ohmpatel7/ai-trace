@@ -22,7 +22,7 @@ export interface Analysis {
 }
 
 interface SubmissionRow { id: number; final_text: string }
-interface IterationRow { id: number; seq: number; ai_output: string; critique: string; action: StepAction }
+interface IterationRow { id: number; seq: number; prompt: string; ai_output: string; critique: string; action: StepAction; action_note: string }
 interface AnalysisRow {
   submission_id: number; computed_at: string; config_json: string; overlap_pct: number; tier: Tier;
   covered_words: number; total_words: number; bridged_words: number; spans_json: string; critique_json: string;
@@ -32,7 +32,7 @@ export function recomputeAnalysis(db: Database.Database, submissionId: number): 
   const submission = db.prepare("SELECT id, final_text FROM submissions WHERE id = ?").get(submissionId) as SubmissionRow | undefined;
   if (!submission) throw new Error(`Submission ${submissionId} not found`);
   const iterations = db
-    .prepare("SELECT id, seq, ai_output, critique, action FROM iterations WHERE submission_id = ? ORDER BY seq")
+    .prepare("SELECT id, seq, prompt, ai_output, critique, action, action_note FROM iterations WHERE submission_id = ? ORDER BY seq")
     .all(submissionId) as IterationRow[];
 
   const overlap = computeOverlap(

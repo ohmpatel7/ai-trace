@@ -56,6 +56,10 @@ CREATE TABLE IF NOT EXISTS iterations (
   critique TEXT NOT NULL DEFAULT '',
   action TEXT NOT NULL CHECK (action IN ('accepted', 'edited', 'rejected', 'verified_elsewhere')),
   action_note TEXT NOT NULL DEFAULT '',
+  -- Where in the work the step sat (Explore, Check claim, Revise), from the team's dataset.
+  stage TEXT NOT NULL DEFAULT '',
+  -- The dataset's scenario tag for a seeded step. Test metadata only; never shown as a finding.
+  scenario_tag TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );

@@ -23,7 +23,7 @@ Then open http://localhost:3000 (or the port Next prints). Use **View as** in th
 npm test
 ```
 
-runs the overlap library tests, the critique rule tests, and a test that the seeded submissions land on the intended tiers.
+runs the overlap library tests, the critique rule tests, and a test that the seeded records match the dataset's own step and word counts.
 
 No environment variables, no external services, no AI model or API calls. All analysis is word matching and word counts on the server.
 
@@ -37,7 +37,7 @@ Next.js (App Router) with TypeScript, SQLite through `better-sqlite3` with a pla
 |---|---|
 | `lib-source/overlap.js` | The overlap calculation. Copied unchanged to `lib/overlap/overlap.js`; do not edit either copy. |
 | `lib-source/overlap.test.js` | Its tests. |
-| `lib-source/synthetic_cases.js` | The nine synthetic students (S1 to S9) and the two assignments. |
+| `lib-source/ai_trace_synthetic_dataset.xlsx`, `lib-source/dataset.json` | The team's synthetic dataset and its sheet-for-sheet JSON conversion. |
 | `lib/overlap/index.ts` | Typed wrapper around the overlap calculation. |
 | `lib/critique.ts` | Critique labels and critique depth. |
 | `lib/config.ts` | Every threshold in one place. |
@@ -70,11 +70,13 @@ All thresholds live in `lib/config.ts` and are printed on the grader's submissio
 | Shared database | Working | SQLite on the server, so every viewer sees the same records. |
 | Identity | Simulated | The View as switcher picks a user row. There is no sign-in. |
 | Course shell | Simulated | The navigation reads as an LMS course page, but only the AI Trace tab does anything. |
-| Student and grader data | Simulated | Nine synthetic students chosen to show every tier, label and edge case, including one who has not started. |
+| Student and grader data | Simulated | The team's synthetic dataset: 12 fictional students, 3 assignments, 36 logged steps. It records the AI-use log only, not the submitted work. |
 | LMS integration | Planned | A real deployment would be an LTI 1.3 tool launched from the course, with identity and roles supplied by the LMS. |
 | Multiple courses and assignments | Planned | The schema supports them; the interface shows one course. |
 | Capturing steps automatically | Planned | Students currently paste each step in by hand. |
 
 ## Synthetic data
 
-Every person, company and figure is invented. The nine cases are chosen so that every tier, critique label, action and edge case appears: a submission with no steps logged, one still in progress, one with heavy reuse and thin critiques, one with heavy reuse and careful critiques, and one blank workspace (Oliver Bennett) for a live walkthrough. The UI labels the data as synthetic on every screen.
+The seed is the team's `ai_trace_synthetic_dataset.xlsx`: 12 fictional students, one project each across three assignments, three logged steps per project, and a Definitions sheet (shown on the About page). Every record is fictional. The dataset records the AI-use log only and deliberately excludes the submitted work, so the grader's overlap figure reads "No submitted work to compare" for these students. Its own volume measure, logged student share, is shown on each submission.
+
+Mapping from the sheet: `student_id` is the UPI, `assignment_title` and `assignment_task` become assignments, `stage` is kept on each step, the `student_revision_or_action` sentence is kept as the step note with a fixed action derived from it (removed or unverified: rejected; kept, rewrote, replaced: edited; otherwise accepted), and `review_example` is stored as test metadata only and never shown as a finding. One blank account (Oliver Bennett) is added outside the dataset for live walkthroughs.

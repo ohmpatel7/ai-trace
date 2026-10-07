@@ -17,6 +17,11 @@ export function openDatabase(filePath: string = DB_PATH): Database.Database {
   db.pragma("journal_mode = WAL");
   db.pragma("foreign_keys = ON");
   db.exec(fs.readFileSync(SCHEMA_PATH, "utf8"));
+  // Columns added after the first schema; CREATE TABLE IF NOT EXISTS does not add them to an existing file.
+  const columns = (db.prepare("PRAGMA table_info(iterations)").all() as { name: string }[]).map((c) => c.name);
+  for (const column of ["stage", "scenario_tag"]) {
+    if (!columns.includes(column)) db.exec(`ALTER TABLE iterations ADD COLUMN ${column} TEXT NOT NULL DEFAULT ''`);
+  }
   return db;
 }
 

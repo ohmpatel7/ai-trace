@@ -1,4 +1,5 @@
 import { PageHeader } from "../components/Shell";
+import { definitions } from "@/lib/seed";
 
 const ROWS: { area: string; state: "Working" | "Simulated" | "Planned"; note: string }[] = [
   { area: "Student AI-use log", state: "Working", note: "Logging and editing AI steps per assignment. Students see their own records only; overlap, tiers and critique labels appear on grader screens." },
@@ -10,7 +11,7 @@ const ROWS: { area: string; state: "Working" | "Simulated" | "Planned"; note: st
   { area: "Shared database", state: "Working", note: "SQLite on the server, so every viewer sees the same records. npm run seed or the reset button rebuilds it." },
   { area: "Identity", state: "Simulated", note: "The View as switcher picks a user row. There is no sign-in and no permission model beyond the role on that row." },
   { area: "Course shell", state: "Simulated", note: "The navigation reads as an LMS course page, but only the AI Trace tab does anything." },
-  { area: "Student and grader data", state: "Simulated", note: "Eight synthetic submissions chosen to show every tier, label and edge case." },
+  { area: "Student and grader data", state: "Simulated", note: "The team's synthetic dataset: 12 fictional students, 3 assignments, 36 logged steps. It records the AI-use log only, not the submitted work." },
   { area: "LMS integration", state: "Planned", note: "A real deployment would be an LTI 1.3 tool launched from the course, with identity and roles supplied by the LMS." },
   { area: "Multiple courses and assignments", state: "Planned", note: "The schema supports them; the interface shows one course." },
   { area: "Capturing steps automatically", state: "Planned", note: "Students currently paste each step in by hand." },
@@ -42,6 +43,20 @@ export default function AboutPage() {
                 <td><span className={`chip ${r.state === "Working" ? "tier-green" : r.state === "Simulated" ? "tier-amber" : ""}`}>{r.state}</span></td>
                 <td>{r.note}</td>
               </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <h2 style={{ fontSize: 18, margin: "24px 0 8px" }}>The dataset</h2>
+      <p className="small muted" style={{ margin: "0 0 12px" }}>
+        Seeded from ai_trace_synthetic_dataset.xlsx, converted sheet for sheet with no values changed. Its own definitions:
+      </p>
+      <div className="table-wrap">
+        <table className="about-table">
+          <thead><tr><th>Field or rule</th><th>Meaning</th></tr></thead>
+          <tbody>
+            {definitions.map((d) => (
+              <tr key={d.field}><td>{d.field}</td><td>{d.meaning}</td></tr>
             ))}
           </tbody>
         </table>

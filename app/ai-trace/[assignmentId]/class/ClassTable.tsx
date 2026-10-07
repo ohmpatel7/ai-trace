@@ -82,7 +82,7 @@ export function ClassTable({ rows, base, expectedMin }: { rows: ClassRow[]; base
                     {r.stepCount}
                     {open && r.stepCount < expectedMin && <span className="small muted"> of {expectedMin}</span>}
                   </td>
-                  <td>{open ? <TierChip tier={r.analysis!.tier} pct={r.analysis!.overlapPct} /> : <span className="small muted">Not yet submitted</span>}</td>
+                  <td>{open ? <TierChip tier={r.analysis!.tier} pct={r.analysis!.overlapPct} totalWords={r.analysis!.totalWords} /> : <span className="small muted">Not yet submitted</span>}</td>
                   <td>
                     {open ? (r.analysis!.critique.depth === null ? <span className="small muted">No steps</span> : plural(r.analysis!.critique.depth, "word")) : ""}
                   </td>

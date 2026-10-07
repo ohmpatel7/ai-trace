@@ -46,7 +46,7 @@ function workspaceState(submissionId: number): WorkspaceState {
 }
 
 export interface StepInput {
-  tool_name: string; prompt: string; ai_output: string; critique: string; action: StepAction; action_note: string;
+  tool_name: string; prompt: string; ai_output: string; critique: string; action: StepAction; action_note: string; stage: string;
 }
 
 function cleanStep(input: StepInput): StepInput {
@@ -59,6 +59,7 @@ function cleanStep(input: StepInput): StepInput {
     critique: input.critique.trim(),
     action: input.action,
     action_note: input.action_note.trim(),
+    stage: input.stage.trim(),
   };
 }
 
@@ -69,9 +70,9 @@ export async function createStep(submissionId: number, input: StepInput): Promis
   const seq = (db.prepare("SELECT COALESCE(MAX(seq), 0) + 1 s FROM iterations WHERE submission_id = ?").get(submissionId) as { s: number }).s;
   const stamp = now();
   db.prepare(
-    `INSERT INTO iterations (submission_id, seq, tool_name, prompt, ai_output, critique, action, action_note, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(submissionId, seq, step.tool_name, step.prompt, step.ai_output, step.critique, step.action, step.action_note, stamp, stamp);
+    `INSERT INTO iterations (submission_id, seq, tool_name, prompt, ai_output, critique, action, action_note, stage, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(submissionId, seq, step.tool_name, step.prompt, step.ai_output, step.critique, step.action, step.action_note, step.stage, stamp, stamp);
   // Logging a step means the assignment is under way, even though the work itself is handed in elsewhere.
   db.prepare("UPDATE submissions SET status = 'in_progress', updated_at = ? WHERE id = ?").run(stamp, submissionId);
   recomputeAnalysis(db, submissionId);
@@ -84,9 +85,9 @@ export async function updateStep(submissionId: number, iterationId: number, inpu
   const step = cleanStep(input);
   const db = getDb();
   db.prepare(
-    `UPDATE iterations SET tool_name = ?, prompt = ?, ai_output = ?, critique = ?, action = ?, action_note = ?, updated_at = ?
+    `UPDATE iterations SET tool_name = ?, prompt = ?, ai_output = ?, critique = ?, action = ?, action_note = ?, stage = ?, updated_at = ?
      WHERE id = ? AND submission_id = ?`,
-  ).run(step.tool_name, step.prompt, step.ai_output, step.critique, step.action, step.action_note, now(), iterationId, submissionId);
+  ).run(step.tool_name, step.prompt, step.ai_output, step.critique, step.action, step.action_note, step.stage, now(), iterationId, submissionId);
   recomputeAnalysis(db, submissionId);
   return workspaceState(submissionId);
 }

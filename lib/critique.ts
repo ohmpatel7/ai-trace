@@ -28,6 +28,9 @@ export const CRITIQUE_RULES: Record<CritiqueLabel, string> = {
   substantive_critique: `The critique has ${config.thinWords} words or more.`,
 };
 
+/** Where in the work a step sat. From the team's dataset; "" means not recorded. */
+export const STAGES = ["Explore", "Check claim", "Revise"] as const;
+
 export const ACTION_LABELS: Record<StepAction, string> = {
   accepted: "Accepted",
   edited: "Edited",
@@ -49,11 +52,29 @@ export interface StepCritique {
   label: CritiqueLabel;
 }
 
+/**
+ * The dataset's volume measure: words the student wrote in the log (prompt,
+ * critique, action) against words the AI produced. Whitespace word counts,
+ * exactly as the dataset defines them. Volume only; not authorship or quality.
+ */
+export interface LoggedVolume {
+  studentWords: number;
+  aiWords: number;
+  /** studentWords / (studentWords + aiWords), or null when nothing is logged. */
+  studentShare: number | null;
+}
+
 export interface CritiqueSummary {
   steps: StepCritique[];
   /** Median critique word count across the submission's steps; null when no steps. */
   depth: number | null;
   counts: Record<CritiqueLabel, number>;
+  logged: LoggedVolume;
+}
+
+export function whitespaceWords(text: string): number {
+  const trimmed = text.trim();
+  return trimmed ? trimmed.split(/\s+/).length : 0;
 }
 
 export function median(values: number[]): number | null {
@@ -64,7 +85,7 @@ export function median(values: number[]): number | null {
 }
 
 export function summariseCritiques(
-  iterations: { id: number; seq: number; critique: string; action: StepAction }[],
+  iterations: { id: number; seq: number; prompt: string; critique: string; action: StepAction; action_note: string }[],
   thinWords: number = config.thinWords,
 ): CritiqueSummary {
   const counts: Record<CritiqueLabel, number> = {
@@ -78,5 +99,16 @@ export function summariseCritiques(
     counts[label] += 1;
     return { iterationId: it.id, seq: it.seq, words: countWords(it.critique), label };
   });
-  return { steps, depth: median(steps.map((s) => s.words)), counts };
+  return { steps, depth: median(steps.map((s) => s.words)), counts, logged: loggedVolume(iterations) };
+}
+
+export function loggedVolume(
+  iterations: { prompt: string; critique: string; action_note: string; ai_output?: string }[],
+  aiOutputs?: string[],
+): LoggedVolume {
+  const studentWords = iterations.reduce((n, it) => n + whitespaceWords(it.prompt) + whitespaceWords(it.critique) + whitespaceWords(it.action_note), 0);
+  const outputs = aiOutputs ?? iterations.map((it) => it.ai_output ?? "");
+  const aiWords = outputs.reduce((n, text) => n + whitespaceWords(text), 0);
+  const total = studentWords + aiWords;
+  return { studentWords, aiWords, studentShare: total === 0 ? null : studentWords / total };
 }

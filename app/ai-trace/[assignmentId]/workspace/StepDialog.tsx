@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { StepInput } from "@/app/ai-trace/actions";
 import type { Iteration } from "@/lib/types";
-import { ACTION_LABELS, CRITIQUE_LABELS, CRITIQUE_RULES, critiqueLabel, type StepAction } from "@/lib/critique";
+import { ACTION_LABELS, CRITIQUE_LABELS, CRITIQUE_RULES, STAGES, critiqueLabel, type StepAction } from "@/lib/critique";
 import { countWords } from "@/lib/overlap";
 import { config } from "@/lib/config";
 
@@ -15,7 +15,7 @@ interface Props {
   onSave: (input: StepInput) => void;
 }
 
-const EMPTY: StepInput = { tool_name: "", prompt: "", ai_output: "", critique: "", action: "edited", action_note: "" };
+const EMPTY: StepInput = { tool_name: "", prompt: "", ai_output: "", critique: "", action: "edited", action_note: "", stage: "" };
 
 export function StepDialog({ open, step, busy, onCancel, onSave }: Props) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -53,6 +53,15 @@ export function StepDialog({ open, step, busy, onCancel, onSave }: Props) {
         <label className="field">
           Tool
           <input type="text" value={form.tool_name} onChange={set("tool_name")} placeholder="ChatGPT, Claude, Copilot…" required />
+        </label>
+        <label className="field">
+          Stage <span className="hint">Where this step sat in your work.</span>
+          <select value={form.stage} onChange={set("stage")}>
+            <option value="">Not recorded</option>
+            {STAGES.map((stage) => (
+              <option key={stage} value={stage}>{stage}</option>
+            ))}
+          </select>
         </label>
         <label className="field">
           Your prompt

@@ -66,6 +66,7 @@ export function Workspace({ assignment, initial }: { assignment: Assignment; ini
             <summary>
               <span className="seq">{it.seq}</span>
               <span className="tool">{it.tool_name}</span>
+              {it.stage && <span className="chip plain">{it.stage}</span>}
               <span className="chip plain">{ACTION_LABELS[it.action]}</span>
               <span className="spacer" />
               <span className="small muted">{formatDateTime(it.created_at)}</span>
