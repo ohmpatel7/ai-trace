@@ -4,10 +4,12 @@
  * Every write the app makes. Each one checks who is acting, writes the record,
  * then recomputes the cached analysis for the submission it touched.
  */
+import Anthropic from "@anthropic-ai/sdk";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { getDb, now } from "@/lib/db";
 import { recomputeAnalysis } from "@/lib/analysis";
+import { llmConfigured, runReflectionCheck } from "@/lib/llm-review";
 import { seedDatabase } from "@/lib/seed";
 import { getViewer, VIEWER_COOKIE } from "@/lib/viewer";
 import { getOrCreateSubmission, getSubmission, listIterations } from "@/lib/queries";
@@ -120,8 +122,77 @@ export async function submitWork(assignmentId: number, finalText: string): Promi
   const stamp = now();
   db.prepare("UPDATE submissions SET final_text = ?, status = 'submitted', submitted_at = ?, updated_at = ? WHERE id = ?").run(finalText.trim(), stamp, stamp, submission.id);
   recomputeAnalysis(db, submission.id);
+  // The reflection check runs as work comes in. A failure here never blocks the hand-in;
+  // the grader can run it again from the submission view.
+  if (llmConfigured()) {
+    try {
+      await runReflectionCheck(db, submission.id, listIterations(submission.id));
+    } catch (err) {
+      console.error("LLM reflection check failed on submit:", (err as Error).message);
+    }
+  }
   revalidatePath("/", "layout");
   return getSubmission(submission.id)!;
+}
+
+export interface CheckOutcome {
+  ok: boolean;
+  message: string;
+}
+
+async function requireGrader() {
+  const viewer = await getViewer();
+  if (viewer.role !== "grader") throw new Error("Only a grader can run the reflection check.");
+}
+
+function describeFailure(err: unknown): string {
+  if (err instanceof Anthropic.AuthenticationError) return "The API key was rejected. Check ANTHROPIC_API_KEY in .env.local.";
+  if (err instanceof Anthropic.RateLimitError) return "The API is rate limiting requests. Try again in a minute.";
+  if (err instanceof Anthropic.APIConnectionError) return "Could not reach the Anthropic API. Check the internet connection.";
+  if (err instanceof Anthropic.APIError) return `The API returned an error (${err.status}).`;
+  return (err as Error).message;
+}
+
+/** Runs the LLM reflection check on one submission's steps. */
+export async function checkSubmission(submissionId: number): Promise<CheckOutcome> {
+  await requireGrader();
+  if (!llmConfigured()) return { ok: false, message: "Add ANTHROPIC_API_KEY to .env.local and restart the server to turn the check on." };
+  const submission = getSubmission(submissionId);
+  if (!submission || submission.status !== "submitted") return { ok: false, message: "Only submitted work can be checked." };
+  try {
+    const reviews = await runReflectionCheck(getDb(), submissionId, listIterations(submissionId));
+    revalidatePath("/ai-trace", "layout");
+    const lookCloser = reviews.filter((r) => r.verdict === "look_closer").length;
+    return { ok: true, message: lookCloser === 0 ? "Checked. Every critique looks considered." : `Checked. ${lookCloser} step${lookCloser === 1 ? "" : "s"} to look closer at.` };
+  } catch (err) {
+    return { ok: false, message: describeFailure(err) };
+  }
+}
+
+/** Runs the check on every submitted piece of work for an assignment that has steps without a current result. */
+export async function checkAssignment(assignmentId: number): Promise<CheckOutcome> {
+  await requireGrader();
+  if (!llmConfigured()) return { ok: false, message: "Add ANTHROPIC_API_KEY to .env.local and restart the server to turn the check on." };
+  const db = getDb();
+  const ids = (db.prepare("SELECT id FROM submissions WHERE assignment_id = ? AND status = 'submitted' ORDER BY id").all(assignmentId) as { id: number }[]).map((r) => r.id);
+  let done = 0;
+  const failures: string[] = [];
+  // Three at a time keeps the class check quick without tripping rate limits.
+  for (let i = 0; i < ids.length; i += 3) {
+    await Promise.all(
+      ids.slice(i, i + 3).map(async (id) => {
+        try {
+          await runReflectionCheck(db, id, listIterations(id));
+          done += 1;
+        } catch (err) {
+          failures.push(describeFailure(err));
+        }
+      }),
+    );
+  }
+  revalidatePath("/ai-trace", "layout");
+  if (failures.length > 0) return { ok: false, message: `Checked ${done} of ${ids.length}. ${failures[0]}` };
+  return { ok: true, message: `Checked ${done} submission${done === 1 ? "" : "s"}.` };
 }
 
 export async function saveReview(submissionId: number, note: string, reviewed: boolean): Promise<void> {

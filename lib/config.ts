@@ -15,6 +15,8 @@ export const config = {
   thinWords: 15,
   /** Steps a student is expected to log for a Lane 2 assignment. */
   expectedMin: 3,
+  /** Claude model used by the LLM reflection check. */
+  llmModel: "claude-opus-5-5",
 } as const;
 
 export type Config = typeof config;
@@ -27,4 +29,5 @@ export const configDescriptions: { key: keyof Config; label: string; explain: st
   { key: "redAbove", label: "Read the process closely", explain: "Overlap at or above this percentage. Between the two is Worth a closer read." },
   { key: "thinWords", label: "Thin critique", explain: "A critique with fewer words than this is thin." },
   { key: "expectedMin", label: "Expected steps", explain: "The minimum number of AI steps a student is asked to log." },
+  { key: "llmModel", label: "LLM reflection check", explain: "The Claude model that reads each critique and suggests where to look closer. Advisory only." },
 ];

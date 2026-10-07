@@ -57,7 +57,7 @@ function nzIso(loggedAt: string): string {
 
 export function seedDatabase(db: Database.Database): void {
   const clear = db.transaction(() => {
-    for (const table of ["grader_reviews", "analysis_results", "iterations", "submissions", "assignments", "enrolments", "courses", "users"]) {
+    for (const table of ["llm_reviews", "grader_reviews", "analysis_results", "iterations", "submissions", "assignments", "enrolments", "courses", "users"]) {
       db.prepare(`DELETE FROM ${table}`).run();
     }
   });

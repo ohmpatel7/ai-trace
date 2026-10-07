@@ -10,6 +10,8 @@ import { median, CRITIQUE_LABELS, CRITIQUE_RULES, type CritiqueLabel } from "@/l
 import { formatDateTime, plural } from "@/lib/format";
 import { CRITIQUE_CLASS } from "@/app/components/CritiqueChip";
 import { ClassTable } from "./ClassTable";
+import { CheckButton } from "@/app/components/CheckButton";
+import { llmConfigured } from "@/lib/llm-review";
 
 const LABEL_ORDER: CritiqueLabel[] = ["substantive_critique", "thin_critique", "accepted_without_evaluation", "no_critique"];
 
@@ -155,6 +157,19 @@ export default async function ClassViewPage({ params }: { params: Promise<{ assi
             })}
           </div>
         </div>
+      </section>
+
+      <section className="card" style={{ marginBottom: 20 }} aria-labelledby="llm-class-heading">
+        <h2 id="llm-class-heading">LLM reflection check</h2>
+        <p className="small" style={{ margin: "0 0 10px" }}>
+          {(() => {
+            const lookCloser = submitted.filter((r) => (r.llm?.lookCloser ?? 0) > 0).length;
+            const notRun = submitted.filter((r) => (r.llm?.checked ?? 0) + (r.llm?.stale ?? 0) === 0).length;
+            return `${plural(lookCloser, "submission")} with steps to look closer at. ${notRun} not checked yet.`;
+          })()}{" "}
+          Claude reads every critique against its AI output and points to the ones that look low-effort. Submissions with steps to look closer at sort to the top.
+        </p>
+        <CheckButton target="assignment" id={assignment.id} label="Check all submitted work" configured={llmConfigured()} />
       </section>
 
       <ClassTable rows={rows} base={base} expectedMin={assignment.expected_min_iterations} />

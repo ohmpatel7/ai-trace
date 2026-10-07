@@ -7,8 +7,10 @@ import { ACTION_LABELS } from "@/lib/critique";
 import { formatDateTime } from "@/lib/format";
 import { HighlightedText, HighlightLegend, colourForSeq } from "@/app/components/HighlightedText";
 import { CritiqueChip } from "@/app/components/CritiqueChip";
+import { LlmChip } from "@/app/components/LlmChip";
+import type { StepCheck } from "@/lib/llm-labels";
 
-export function SubmissionView({ submission, iterations, analysis }: { submission: Submission; iterations: Iteration[]; analysis: Analysis }) {
+export function SubmissionView({ submission, iterations, analysis, llmChecks }: { submission: Submission; iterations: Iteration[]; analysis: Analysis; llmChecks: Record<number, StepCheck> }) {
   const [activeStep, setActiveStep] = useState<number | null>(null);
   const sources = iterations.map((it) => ({ id: it.id, seq: it.seq, colour: colourForSeq(it.seq) }));
   const tools = Object.fromEntries(iterations.map((it) => [it.id, it.tool_name]));
@@ -52,6 +54,7 @@ export function SubmissionView({ submission, iterations, analysis }: { submissio
                   {it.stage && <span className="chip plain">{it.stage}</span>}
                   <span className="chip plain">{ACTION_LABELS[it.action]}</span>
                   <CritiqueChip label={crit.label} words={crit.words} />
+                  <LlmChip check={llmChecks[it.id]} />
                   <span className="spacer" />
                   <span className="small muted">{reused > 0 ? `${reused} words reused` : "no words reused"}</span>
                 </summary>
@@ -60,6 +63,9 @@ export function SubmissionView({ submission, iterations, analysis }: { submissio
                   <div><h4>AI output</h4><p className="reading">{it.ai_output}</p></div>
                   <div><h4>Student's critique</h4><p className="reading">{it.critique || <span className="muted">No critique recorded.</span>}</p></div>
                   <div><h4>What they did next</h4><p className="reading">{ACTION_LABELS[it.action]}{it.action_note ? `. ${it.action_note}` : ""}</p></div>
+                  {llmChecks[it.id]?.current && (
+                    <div><h4>LLM reflection check (suggestion)</h4><p className="small" style={{ margin: 0 }}>{llmChecks[it.id].reason}</p></div>
+                  )}
                   <p className="small muted" style={{ margin: 0 }}>Logged {formatDateTime(it.created_at)}</p>
                 </div>
               </details>

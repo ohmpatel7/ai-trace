@@ -25,7 +25,16 @@ npm test
 
 runs the overlap library tests, the critique rule tests, and a test that the seeded records match the dataset's own step and word counts.
 
-No environment variables, no external services, no AI model or API calls. All analysis is word matching and word counts on the server.
+The overlap, tier and critique figures need no environment variables or external services: they are word matching and word counts on the server.
+
+**LLM reflection check (optional).** To turn it on, copy `.env.example` to `.env.local`, paste your own Anthropic API key, and restart `npm run dev`. Without a key, the app runs normally and the check buttons say how to turn it on.
+
+- Claude (`claude-opus-5-5`, set in `lib/config.ts`) reads each logged step and returns, per step, "Looks considered" or "Look closer" with a one-line reason. It looks for critiques that are missing, generic, could apply to any output, or accept an unsupported claim.
+- It runs automatically when a student hands work in, and on demand from the grader's submission view ("Run check") and class view ("Check all submitted work").
+- Results live in their own table, keyed by a hash of the step, so an edited step shows "changed since check" until it is re-run. Nothing is written back into student records.
+- Submissions with steps to look closer at sort first in the class view, and the results appear on each step and in the PDF report.
+- It is advisory. The grader decides what a suggestion means, and the wording never implies misconduct.
+- It sends logged steps to Anthropic's API. Use synthetic data only unless the university has approved otherwise.
 
 ## Stack
 
@@ -41,6 +50,7 @@ Next.js (App Router) with TypeScript, SQLite through `better-sqlite3` with a pla
 | `lib/overlap/index.ts` | Typed wrapper around the overlap calculation. |
 | `lib/critique.ts` | Critique labels and critique depth. |
 | `lib/config.ts` | Every threshold in one place. |
+| `lib/llm-review.ts` | The LLM reflection check: prompt, structured output schema, caching by step hash. |
 | `lib/analysis.ts` | Computes and caches overlap and critique results per submission. Never writes to student records. |
 | `lib/seed.ts`, `scripts/seed.ts` | Seed the database. |
 | `db/schema.sql` | The schema. |
@@ -63,10 +73,11 @@ All thresholds live in `lib/config.ts` and are printed on the grader's submissio
 |---|---|---|
 | Student AI-use log | Working | Logging and editing AI steps per assignment. Students see their own records only; overlap, tiers and critique labels appear on grader screens. |
 | Handing work in | Simulated | Students hand work in through Assignments. Here that is a paste box; in a real course it is the LMS upload, which locks the AI-use log. |
-| Overlap and tiers | Working | Word matching between the draft and logged AI outputs. No AI model is involved. |
+| Overlap and tiers | Working | Word matching between the submitted work and logged AI outputs. No AI model is involved in these figures. |
+| LLM reflection check | Working | Optional, needs an Anthropic API key. Claude suggests which critiques to look closer at; advisory only. |
+| PDF report | Working | Export PDF report on any submission, then Print or save as PDF. |
 | Critique labels | Working | Plain word-count rules per step, and critique depth as the median across a submission. |
 | Grader class view and submission view | Working | Sorting, search, the reviewed toggle, private notes, highlights that open the step behind them. |
-| Printable summary | Working | A print stylesheet over the same records. |
 | Shared database | Working | SQLite on the server, so every viewer sees the same records. |
 | Identity | Simulated | The View as switcher picks a user row. There is no sign-in. |
 | Course shell | Simulated | The navigation reads as an LMS course page, but only the AI Trace tab does anything. |

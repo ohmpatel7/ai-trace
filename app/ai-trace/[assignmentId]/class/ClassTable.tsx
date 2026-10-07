@@ -24,6 +24,7 @@ export function ClassTable({ rows, base, expectedMin }: { rows: ClassRow[]; base
       if (!a.analysis || !b.analysis) return (a.analysis ? 0 : 1) - (b.analysis ? 0 : 1) || a.student.name.localeCompare(b.student.name);
       if (sort === "overlap") return b.analysis.overlapPct - a.analysis.overlapPct || a.student.name.localeCompare(b.student.name);
       return (
+        (b.llm?.lookCloser ?? 0) - (a.llm?.lookCloser ?? 0) ||
         TIER_RANK[a.analysis.tier] - TIER_RANK[b.analysis.tier] ||
         b.analysis.overlapPct - a.analysis.overlapPct ||
         a.student.name.localeCompare(b.student.name)
@@ -61,6 +62,7 @@ export function ClassTable({ rows, base, expectedMin }: { rows: ClassRow[]; base
               <th>AI steps</th>
               <th>Overlap</th>
               <th>Critique depth</th>
+              <th>LLM check</th>
               <th>Reviewed</th>
             </tr>
           </thead>
@@ -86,18 +88,27 @@ export function ClassTable({ rows, base, expectedMin }: { rows: ClassRow[]; base
                   <td>
                     {open ? (r.analysis!.critique.depth === null ? <span className="small muted">No steps</span> : plural(r.analysis!.critique.depth, "word")) : ""}
                   </td>
+                  <td>
+                    {open && r.llm && (r.llm.checked + r.llm.stale === 0 ? (
+                      <span className="small muted">Not run</span>
+                    ) : r.llm.lookCloser > 0 ? (
+                      <span className="chip tier-amber">{r.llm.lookCloser} to look closer</span>
+                    ) : (
+                      <span className="chip tier-green">Looks considered</span>
+                    ))}
+                  </td>
                   <td>{open ? (r.review?.reviewed ? "Yes" : "Not yet") : ""}</td>
                 </tr>
               );
             })}
             {visible.length === 0 && (
-              <tr><td colSpan={6} className="muted">No students match.</td></tr>
+              <tr><td colSpan={7} className="muted">No students match.</td></tr>
             )}
           </tbody>
         </table>
       </div>
       <p className="small muted" style={{ marginTop: 8 }}>
-        Review priority lists "Read the process closely" first, then by overlap. Critique depth is the median word count of a student's critiques. Select a name to open the submission.
+        Review priority lists submissions with steps the LLM check suggests looking closer at first, then "Read the process closely", then by overlap. Critique depth is the median word count of a student's critiques. Select a name to open the submission.
       </p>
     </section>
   );

@@ -3,6 +3,7 @@
  */
 import { getDb } from "./db";
 import { getAnalysis, type Analysis } from "./analysis";
+import { listReviews, summariseReviews, type ReviewSummary } from "./llm-review";
 import type { Assignment, Course, GraderReview, Iteration, Submission, User } from "./types";
 
 export function listUsers(): User[] {
@@ -52,15 +53,17 @@ export interface ClassRow {
   stepCount: number;
   analysis: Analysis | null;
   review: GraderReview | null;
+  llm: ReviewSummary | null;
 }
 
 export function listClassRows(assignmentId: number, graderId: number): ClassRow[] {
   const db = getDb();
   const assignment = getAssignment(assignmentId);
   if (!assignment) return [];
+  // Students taking this assignment: anyone with a submission row for it (one is created when they open its log).
   const students = db
-    .prepare("SELECT u.* FROM users u JOIN enrolments e ON e.user_id = u.id WHERE e.course_id = ? AND e.role = 'student' ORDER BY u.name")
-    .all(assignment.course_id) as User[];
+    .prepare("SELECT u.* FROM users u JOIN submissions s ON s.student_id = u.id WHERE s.assignment_id = ? ORDER BY u.name")
+    .all(assignmentId) as User[];
   return students.map((student) => {
     const submission = getSubmissionFor(assignmentId, student.id) ?? null;
     const stepCount = submission
@@ -73,6 +76,7 @@ export function listClassRows(assignmentId: number, graderId: number): ClassRow[
       stepCount,
       analysis: submitted && submission ? getAnalysis(db, submission.id) : null,
       review: submission ? getReview(submission.id, graderId) ?? null : null,
+      llm: submitted && submission ? summariseReviews(listReviews(db, submission.id), listIterations(submission.id)) : null,
     };
   });
 }

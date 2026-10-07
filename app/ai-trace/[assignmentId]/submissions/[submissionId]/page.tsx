@@ -12,6 +12,8 @@ import { formatDateTime, plural } from "@/lib/format";
 import { config } from "@/lib/config";
 import { SubmissionView } from "./SubmissionView";
 import { ReviewForm } from "./ReviewForm";
+import { CheckButton } from "@/app/components/CheckButton";
+import { checksByStep, listReviews, llmConfigured, summariseReviews } from "@/lib/llm-review";
 
 export default async function SubmissionPage({ params }: { params: Promise<{ assignmentId: string; submissionId: string }> }) {
   const { assignmentId, submissionId } = await params;
@@ -40,6 +42,8 @@ export default async function SubmissionPage({ params }: { params: Promise<{ ass
   const iterations = listIterations(submission.id);
   const analysis = getAnalysis(getDb(), submission.id);
   const review = getReview(submission.id, viewer.id);
+  const llmReviews = listReviews(getDb(), submission.id);
+  const llm = summariseReviews(llmReviews, iterations);
   const crumbs = [{ href: "/ai-trace", label: "AI Trace" }, { href: `/ai-trace/${assignment.id}/class`, label: "Class view" }];
 
   return (
@@ -76,11 +80,25 @@ export default async function SubmissionPage({ params }: { params: Promise<{ ass
         </p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
           <SettingsPanel />
-          <Link href={`/ai-trace/${assignment.id}/submissions/${submission.id}/print`} className="btn small">Printable summary</Link>
+          <Link href={`/ai-trace/${assignment.id}/submissions/${submission.id}/print`} className="btn small">Export PDF report</Link>
         </div>
       </div>
 
-      <SubmissionView submission={submission} iterations={iterations} analysis={analysis} />
+      <section className="card" style={{ marginBottom: 16 }} aria-labelledby="llm-heading">
+        <h2 id="llm-heading">LLM reflection check</h2>
+        <p className="small" style={{ margin: "0 0 10px" }}>
+          {llm.checked + llm.stale === 0
+            ? "Not run yet for this submission."
+            : `${llm.lookCloser} of ${llm.total} steps to look closer at${llm.stale > 0 ? `, ${llm.stale} changed since the last check` : ""}.`}{" "}
+          Claude reads each critique against the AI output it responds to and suggests where a critique looks low-effort or generic. Each step below shows the suggestion and the reason.
+        </p>
+        <CheckButton target="submission" id={submission.id} label={llm.checked + llm.stale === 0 ? "Run check" : "Run check again"} configured={llmConfigured()} />
+        <p className="small muted" style={{ margin: "10px 0 0" }}>
+          A suggestion for the grader, not a finding. It reads only what the student logged, and the grader decides what it means.
+        </p>
+      </section>
+
+      <SubmissionView submission={submission} iterations={iterations} analysis={analysis} llmChecks={checksByStep(llmReviews, iterations)} />
 
       <section className="card" style={{ marginTop: 20 }} aria-labelledby="review-heading">
         <h2 id="review-heading">Your review</h2>

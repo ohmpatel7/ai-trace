@@ -77,6 +77,17 @@ CREATE TABLE IF NOT EXISTS analysis_results (
   critique_json TEXT NOT NULL
 );
 
+-- LLM reflection check results, one per step. Advisory and recomputable; never part of the student's record.
+CREATE TABLE IF NOT EXISTS llm_reviews (
+  iteration_id INTEGER PRIMARY KEY REFERENCES iterations(id) ON DELETE CASCADE,
+  submission_id INTEGER NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
+  model TEXT NOT NULL,
+  verdict TEXT NOT NULL CHECK (verdict IN ('considered', 'look_closer')),
+  reason TEXT NOT NULL,
+  input_hash TEXT NOT NULL,
+  checked_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS grader_reviews (
   submission_id INTEGER NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
   grader_id INTEGER NOT NULL REFERENCES users(id),

@@ -12,6 +12,7 @@ import { config } from "@/lib/config";
 import { ACTION_LABELS } from "@/lib/critique";
 import { tierLabel } from "@/lib/overlap";
 import { PrintButton } from "./PrintButton";
+import { listReviews, stepHash, summariseReviews, VERDICT_LABELS } from "@/lib/llm-review";
 
 export default async function PrintPage({ params }: { params: Promise<{ assignmentId: string; submissionId: string }> }) {
   const { assignmentId, submissionId } = await params;
@@ -27,8 +28,9 @@ export default async function PrintPage({ params }: { params: Promise<{ assignme
   const analysis = getAnalysis(getDb(), submission.id);
   const review = getReview(submission.id, viewer.id);
   const critiqueBy = new Map(analysis.critique.steps.map((s) => [s.iterationId, s]));
-  const reusedBy = new Map<number, number>();
-  for (const span of analysis.spans) reusedBy.set(span.sourceId, (reusedBy.get(span.sourceId) ?? 0) + span.words);
+  const llmReviews = listReviews(getDb(), submission.id);
+  const llmBy = new Map(llmReviews.map((r) => [r.iteration_id, r]));
+  const llm = summariseReviews(llmReviews, iterations);
 
   return (
     <div className="print-page">
@@ -58,7 +60,7 @@ export default async function PrintPage({ params }: { params: Promise<{ assignme
       <div className="table-wrap" style={{ marginTop: 14 }}>
         <table>
           <thead>
-            <tr><th>Step</th><th>Tool and action</th><th>Critique label</th><th>Prompt</th><th>Student's critique</th><th>Words reused</th></tr>
+            <tr><th>Step</th><th>Tool and action</th><th>Critique label</th><th>Prompt</th><th>Student's critique</th><th>LLM check</th></tr>
           </thead>
           <tbody>
             {iterations.length === 0 && <tr><td colSpan={6} className="muted">No AI steps were logged.</td></tr>}
@@ -71,13 +73,24 @@ export default async function PrintPage({ params }: { params: Promise<{ assignme
                   <td><CritiqueChip label={crit.label} words={crit.words} /></td>
                   <td className="reading" style={{ fontSize: 13 }}>{it.prompt}</td>
                   <td className="reading" style={{ fontSize: 13 }}>{it.critique || <span className="muted">No critique recorded.</span>}</td>
-                  <td>{reusedBy.get(it.id) ?? 0}</td>
+                  <td className="small">
+                    {(() => {
+                      const r = llmBy.get(it.id);
+                      if (!r) return <span className="muted">Not checked</span>;
+                      if (r.input_hash !== stepHash(it)) return <span className="muted">Changed since check</span>;
+                      return <><strong>{VERDICT_LABELS[r.verdict]}</strong><div className="muted">{r.reason}</div></>;
+                    })()}
+                  </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
+
+      <p className="small" style={{ marginTop: 10 }}>
+        LLM reflection check: {llm.checked + llm.stale === 0 ? "not run for this submission." : `${llm.lookCloser} of ${llm.total} steps suggested for a closer look (${llmReviews[0]?.model ?? ""}).`} These are suggestions from Claude about where a critique looks low-effort, not findings about the student.
+      </p>
 
       <div className="card" style={{ marginTop: 14 }}>
         <h3>Grader's note</h3>
