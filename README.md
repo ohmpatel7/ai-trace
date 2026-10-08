@@ -9,6 +9,8 @@ Two interfaces over one record store:
 
 AI Trace supports marking; it does not perform it. Scores only cover AI output the student chose to log and are never findings about the student.
 
+New to the project? Start with [HOW-IT-WORKS.md](HOW-IT-WORKS.md), a plain-language guide to what it does and how to run it.
+
 ## Run it
 
 ```bash
