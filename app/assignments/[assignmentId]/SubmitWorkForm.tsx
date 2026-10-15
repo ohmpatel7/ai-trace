@@ -42,7 +42,7 @@ export function SubmitWorkForm({ assignmentId }: { assignmentId: number }) {
       <dialog ref={confirmRef} aria-labelledby="confirm-heading">
         <form method="dialog" onSubmit={(e) => { e.preventDefault(); submit(); }}>
           <h2 id="confirm-heading">Submit this work?</h2>
-          <p className="small">Once submitted, your work and your AI-use log for this assignment are locked. The grader reads them together.</p>
+          <p className="small">Once submitted, your work and your AI-use log for this assignment are saved. The grader reads them together.</p>
           <div className="dialog-actions">
             <button type="button" className="btn" onClick={() => confirmRef.current?.close()}>Not yet</button>
             <button type="submit" className="btn primary">Submit</button>

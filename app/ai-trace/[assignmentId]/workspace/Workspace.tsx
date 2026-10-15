@@ -41,10 +41,10 @@ export function Workspace({ assignment, initial }: { assignment: Assignment; ini
           <div>
             <strong>{plural(iterations.length, "step")} logged.</strong>{" "}
             {locked ? (
-              <span>Work submitted {formatDateTime(submission.submitted_at)}; this log is locked.</span>
+              <span>Work submitted {formatDateTime(submission.submitted_at)}; this log is saved.</span>
             ) : (
               <span>
-                Log a step each time you use an AI tool. Hand your work in through <Link href={`/assignments/${assignment.id}`}>Assignments</Link> as usual; the log locks when you do.
+                Log a step each time you use an AI tool. Hand your work in through <Link href={`/assignments/${assignment.id}`}>Assignments</Link> as usual; the log saves when you do.
               </span>
             )}
           </div>

@@ -41,7 +41,7 @@ export default async function AssignmentPage({ params }: { params: Promise<{ ass
           <Link href={`/ai-trace/${assignment.id}/workspace`}>View your AI-use log</Link>
         ) : (
           <>
-            <Link href={`/ai-trace/${assignment.id}/workspace`}>Log AI use</Link> before you submit; the log locks once your work is in.
+            <Link href={`/ai-trace/${assignment.id}/workspace`}>Log AI use</Link> before you submit; the log saves once your work is in.
           </>
         )}
       </div>
