@@ -12,8 +12,7 @@ import { formatDateTime, plural } from "@/lib/format";
 import { config } from "@/lib/config";
 import { SubmissionView } from "./SubmissionView";
 import { ReviewForm } from "./ReviewForm";
-import { CheckButton } from "@/app/components/CheckButton";
-import { checksByStep, listReviews, llmConfigured, summariseReviews } from "@/lib/llm-review";
+import { checksByStep, listReviews } from "@/lib/llm-review";
 
 export default async function SubmissionPage({ params }: { params: Promise<{ assignmentId: string; submissionId: string }> }) {
   const { assignmentId, submissionId } = await params;
@@ -43,7 +42,6 @@ export default async function SubmissionPage({ params }: { params: Promise<{ ass
   const analysis = getAnalysis(getDb(), submission.id);
   const review = getReview(submission.id, viewer.id);
   const llmReviews = listReviews(getDb(), submission.id);
-  const llm = summariseReviews(llmReviews, iterations);
   const crumbs = [{ href: "/ai-trace", label: "AI Trace" }, { href: `/ai-trace/${assignment.id}/class`, label: "Class view" }];
 
   return (
@@ -54,7 +52,7 @@ export default async function SubmissionPage({ params }: { params: Promise<{ ass
         <div className="stats-row">
           <div className="stat">
             <TierChip tier={analysis.tier} pct={analysis.overlapPct} totalWords={analysis.totalWords} />
-            <span>{analysis.totalWords === 0 ? "overlap needs the submitted work, which is not on file" : `${analysis.coveredWords} of ${analysis.totalWords} words match a logged AI output`}</span>
+            <span>{analysis.totalWords === 0 ? "overlap with logged AI wording" : `${analysis.coveredWords} of ${analysis.totalWords} words match a logged AI output`}</span>
           </div>
           <div className="stat">
             <strong>{analysis.critique.logged.studentShare === null ? "–" : `${Math.round(analysis.critique.logged.studentShare * 100)}%`}</strong>
@@ -82,22 +80,6 @@ export default async function SubmissionPage({ params }: { params: Promise<{ ass
         </div>
       </div>
 
-      <section className="card" style={{ marginBottom: 16 }} aria-labelledby="llm-heading">
-        <h2 id="llm-heading">LLM reflection check</h2>
-        <p className="small" style={{ margin: "0 0 10px" }}>
-          {llm.checked + llm.stale === 0
-            ? "Not run yet for this submission."
-            : `${llm.lookCloser} of ${llm.total} steps to look closer at${llm.stale > 0 ? `, ${llm.stale} changed since the last check` : ""}.`}{" "}
-          Claude reads each critique against the AI output it responds to and suggests where a critique looks low-effort or generic. Each step below shows the suggestion and the reason.
-        </p>
-        {/* The check runs on hand-in, so the button only appears when there is nothing current to show. */}
-        {(llm.checked === 0 || llm.stale > 0) && (
-          <CheckButton target="submission" id={submission.id} label={llm.checked + llm.stale === 0 ? "Run check" : "Run check again"} configured={llmConfigured()} />
-        )}
-        <p className="small muted" style={{ margin: "10px 0 0" }}>
-          A suggestion for the grader, not a finding. It reads only what the student logged, and the grader decides what it means.
-        </p>
-      </section>
 
       <SubmissionView submission={submission} iterations={iterations} analysis={analysis} llmChecks={checksByStep(llmReviews, iterations)} />
 

@@ -10,8 +10,8 @@ export const TIER_RULES: Record<Tier, string> = {
 export function TierChip({ tier, pct, totalWords }: { tier: Tier; pct?: number; totalWords?: number }) {
   if (totalWords === 0) {
     return (
-      <span className="chip plain" title="No submitted work is on file, so there is nothing to compare the logged AI outputs against.">
-        No submitted work to compare
+      <span className="chip plain" title="There is no previous similar work on file to compare the logged AI outputs against.">
+        No previous similar work to compare
       </span>
     );
   }

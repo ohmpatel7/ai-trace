@@ -32,7 +32,7 @@ The overlap, tier and critique figures need no environment variables or external
 **LLM reflection check (optional).** To turn it on, copy `.env.example` to `.env.local`, paste your own Anthropic API key, and restart `npm run dev`. Without a key, the app runs normally and the check buttons say how to turn it on.
 
 - Claude (`claude-opus-5-5`, set in `lib/config.ts`) reads each logged step and returns, per step, "Looks considered" or "Look closer" with a one-line reason. It looks for critiques that are missing, generic, could apply to any output, or accept an unsupported claim.
-- It runs automatically when a student hands work in, and on demand from the grader's submission view ("Run check") and class view ("Check all submitted work").
+- It runs automatically when a student hands work in, and on demand from the grader's class view ("Check all submitted work").
 - Results live in their own table, keyed by a hash of the step, so an edited step shows "changed since check" until it is re-run. Nothing is written back into student records.
 - Submissions with steps to look closer at sort first in the class view, and the results appear on each step and in the PDF report.
 - It is advisory. The grader decides what a suggestion means, and the wording never implies misconduct.
@@ -90,6 +90,6 @@ All thresholds live in `lib/config.ts` and are printed on the grader's submissio
 
 ## Synthetic data
 
-The seed is the team's `ai_trace_synthetic_dataset.xlsx`: 12 fictional students, one project each across three assignments, three logged steps per project, and a Definitions sheet (shown on the About page). Every record is fictional. The dataset records the AI-use log only and deliberately excludes the submitted work, so the grader's overlap figure reads "No submitted work to compare" for these students. Its own volume measure, logged student share, is shown on each submission.
+The seed is the team's `ai_trace_synthetic_dataset.xlsx`: 12 fictional students, one project each across three assignments, three logged steps per project, and a Definitions sheet (shown on the About page). Every record is fictional. The dataset records the AI-use log only and deliberately excludes the submitted work, so the grader's overlap figure reads "No previous similar work to compare" for these students. Its own volume measure, logged student share, is shown on each submission.
 
 Mapping from the sheet: `student_id` is the UPI, `assignment_title` and `assignment_task` become assignments, `stage` is kept on each step, the `student_revision_or_action` sentence is kept as the step note with a fixed action derived from it (removed or unverified: rejected; kept, rewrote, replaced: edited; otherwise accepted), and `review_example` is stored as test metadata only and never shown as a finding. One blank account (Oliver Bennett) is added outside the dataset for live walkthroughs.

@@ -13,7 +13,7 @@ All the data is made up. It comes from our team dataset, `ai_trace_synthetic_dat
 
 - Use **View as** at the top to switch between the grader (Taylor Brooks) and any student. It's one shared database, so what a student does shows up for the grader straight away.
 - **As a student:** the AI Trace tab is where you log steps. The Assignments tab is where you hand work in. Handing work in locks the log.
-- **As the grader:** open an assignment to see the class, then click a student to see their steps, the figures, the LLM check, and the **Export PDF report** button.
+- **As the grader:** open an assignment to see the class, then click a student to see their steps, the figures, the LLM result on each step, and the **Export PDF report** button.
 - **Oliver Bennett** is a blank student. Use him to show the whole flow from scratch.
 - **Reset demo data** puts everything back to the starting data.
 
@@ -24,13 +24,13 @@ These are plain word counts. No AI is involved in them.
 - **Critique label.** Each critique is labelled by its length. Empty is "No critique recorded". Under 15 words on a step the student accepted is "Accepted without evaluation". Under 15 words otherwise is "Thin critique". 15 words or more is "Substantive critique".
 - **Critique depth.** The middle critique length across a student's steps.
 - **Logged student share.** The words the student wrote in the log, compared with the words the AI wrote. It measures volume only, not quality.
-- **Overlap.** If a student's handed-in work contains 6 or more words in a row copied from an AI answer they logged, that passage is highlighted and counted. Our dataset doesn't include handed-in work, so this shows "No submitted work to compare" for those 12 students. Try it with Oliver Bennett.
+- **Overlap.** If a student's handed-in work contains 6 or more words in a row copied from an AI answer they logged, that passage is highlighted and counted. Our dataset doesn't include handed-in work, so this shows "No previous similar work to compare" for those 12 students. Try it with Oliver Bennett.
 
 ## How the LLM check works
 
 This is the part from our proposal.
 
-1. When work is handed in, or when the grader presses **Run check**, the app sends that student's logged steps to Claude, Anthropic's AI model.
+1. When work is handed in, or when the grader presses **Check all submitted work** on the class view, the app sends each student's logged steps to Claude, Anthropic's AI model.
 2. For each step, Claude reads the critique next to the AI answer it responds to. It decides whether the critique actually engages with the answer, or looks low-effort ("Looks fine to me", blank, or accepting an unsupported claim).
 3. It answers **Looks considered** or **Look closer**, with a one-line reason. The grader sees this on each step, and students with steps to look closer at move to the top of the class list.
 
