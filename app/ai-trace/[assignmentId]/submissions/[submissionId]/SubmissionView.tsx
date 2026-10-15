@@ -26,8 +26,13 @@ export function SubmissionView({ submission, iterations, analysis, llmChecks }: 
 
   // Deep links from the class view arrive as #step-<id>.
   useEffect(() => {
-    const match = window.location.hash.match(/^#step-(\d+)$/);
-    if (match) openStep(Number(match[1]));
+    const openFromHash = () => {
+      const match = window.location.hash.match(/^#step-(\d+)$/);
+      if (match) openStep(Number(match[1]));
+    };
+    openFromHash();
+    window.addEventListener("hashchange", openFromHash);
+    return () => window.removeEventListener("hashchange", openFromHash);
   }, []);
 
   return (
