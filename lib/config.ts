@@ -28,6 +28,5 @@ export const configDescriptions: { key: keyof Config; label: string; explain: st
   { key: "greenBelow", label: "Mostly own wording", explain: "Overlap below this percentage." },
   { key: "redAbove", label: "Read the process closely", explain: "Overlap at or above this percentage. Between the two is Worth a closer read." },
   { key: "thinWords", label: "Thin critique", explain: "A critique with fewer words than this is thin." },
-  { key: "expectedMin", label: "Expected steps", explain: "The minimum number of AI steps a student is asked to log." },
   { key: "llmModel", label: "LLM reflection check", explain: "The Claude model that reads each critique and suggests where to look closer. Advisory only." },
 ];

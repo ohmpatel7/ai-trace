@@ -31,12 +31,15 @@ export function SubmissionView({ submission, iterations, analysis, llmChecks }: 
   }, []);
 
   return (
-    <div className="two-col">
-      <section className="card" aria-labelledby="final-heading">
-        <h2 id="final-heading">Submitted work</h2>
-        <HighlightedText text={submission.final_text} spans={analysis.spans} sources={sources} activeSourceId={activeStep} onSelect={openStep} emptyMessage="No submitted work is on file for this student. The team dataset records the AI-use log only, so overlap highlights cannot be shown here." />
-        <HighlightLegend sources={sources} tools={tools} />
-      </section>
+    <>
+      {/* Shown only when work is on file; the team dataset records the AI-use log alone. */}
+      {submission.final_text.trim() && (
+        <section className="card" style={{ marginBottom: 16 }} aria-labelledby="final-heading">
+          <h2 id="final-heading">Submitted work</h2>
+          <HighlightedText text={submission.final_text} spans={analysis.spans} sources={sources} activeSourceId={activeStep} onSelect={openStep} />
+          <HighlightLegend sources={sources} tools={tools} />
+        </section>
+      )}
       <section aria-labelledby="record-heading">
         <h2 id="record-heading" style={{ fontSize: 16, margin: "0 0 10px" }}>AI steps as the student logged them</h2>
         {iterations.length === 0 && (
@@ -53,10 +56,11 @@ export function SubmissionView({ submission, iterations, analysis, llmChecks }: 
                   <span className="tool">{it.tool_name}</span>
                   {it.stage && <span className="chip plain">{it.stage}</span>}
                   <span className="chip plain">{ACTION_LABELS[it.action]}</span>
-                  <CritiqueChip label={crit.label} words={crit.words} />
-                  <LlmChip check={llmChecks[it.id]} />
-                  <span className="spacer" />
-                  <span className="small muted">{reused > 0 ? `${reused} words reused` : "no words reused"}</span>
+                  <span className="step-row">
+                    <CritiqueChip label={crit.label} words={crit.words} />
+                    <LlmChip check={llmChecks[it.id]} />
+                  </span>
+                  <span className="step-row small muted">{reused > 0 ? `${reused} words reused` : "no words reused"}</span>
                 </summary>
                 <div className="body">
                   <div><h4>Prompt</h4><p className="reading">{it.prompt}</p></div>
@@ -73,6 +77,6 @@ export function SubmissionView({ submission, iterations, analysis, llmChecks }: 
           })}
         </div>
       </section>
-    </div>
+    </>
   );
 }

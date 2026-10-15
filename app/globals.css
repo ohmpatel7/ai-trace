@@ -160,6 +160,7 @@ tr.dimmed td { color: var(--muted); }
 .step > summary .seq { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font-size: 12px; font-weight: 700; border: 1px solid rgba(0,0,0,0.12); background: var(--surface-soft); }
 .step > summary .tool { font-weight: 600; }
 .step > summary .spacer { flex: 1; }
+.step > summary .step-row { flex-basis: 100%; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .step .body { padding: 0 16px 14px; display: grid; gap: 12px; border-top: 1px solid var(--line); padding-top: 12px; }
 .step .body h4 { margin: 0 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
 .step .body .reading { white-space: pre-wrap; margin: 0; }

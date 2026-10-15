@@ -46,7 +46,7 @@ export default async function PrintPage({ params }: { params: Promise<{ assignme
       <div className="card">
         <div className="stats-row">
           <div className="stat"><TierChip tier={analysis.tier} pct={analysis.overlapPct} /><span>{analysis.coveredWords} of {analysis.totalWords} words match a logged AI output</span></div>
-          <div className="stat"><strong>{iterations.length} of {assignment.expected_min_iterations}</strong><span>AI steps logged against the minimum</span></div>
+          <div className="stat"><strong>{iterations.length}</strong><span>AI steps logged</span></div>
           <div className="stat"><strong>{analysis.critique.depth ?? "–"}</strong><span>critique depth (median words)</span></div>
           <div className="stat"><strong>{analysis.bridgedWords}</strong><span>bridged words</span></div>
         </div>

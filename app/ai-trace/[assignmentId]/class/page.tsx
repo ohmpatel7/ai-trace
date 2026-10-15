@@ -57,7 +57,7 @@ export default async function ClassViewPage({ params }: { params: Promise<{ assi
     <>
       <PageHeader
         title={assignment.title}
-        subtitle={`Class view. Lane 2, due ${formatDateTime(assignment.due_at)}. ${assignment.expected_min_iterations} AI steps expected per student.`}
+        subtitle={`Class view. Lane 2, due ${formatDateTime(assignment.due_at)}.`}
         crumbs={[{ href: "/ai-trace", label: "AI Trace" }]}
       />
 
@@ -78,15 +78,14 @@ export default async function ClassViewPage({ params }: { params: Promise<{ assi
         </details>
         <details className="tile">
           <summary>
-            <strong>{medianSteps === null ? "–" : medianSteps} of {assignment.expected_min_iterations}</strong>
-            <span>median AI steps against the minimum</span>
+            <strong>{medianSteps === null ? "–" : medianSteps}</strong>
+            <span>median AI steps logged</span>
           </summary>
           <div className="expand">
             <ul>
               {submitted.map((r) => (
                 <li key={r.student.id}>
                   <Link href={`${base}/${r.submission!.id}`}>{r.student.name}</Link>: {plural(r.stepCount, "step")}
-                  {r.stepCount < assignment.expected_min_iterations ? " (under the minimum)" : ""}
                 </li>
               ))}
             </ul>
@@ -172,7 +171,7 @@ export default async function ClassViewPage({ params }: { params: Promise<{ assi
         <CheckButton target="assignment" id={assignment.id} label="Check all submitted work" configured={llmConfigured()} />
       </section>
 
-      <ClassTable rows={rows} base={base} expectedMin={assignment.expected_min_iterations} />
+      <ClassTable rows={rows} base={base} />
       <GraderFooter />
     </>
   );

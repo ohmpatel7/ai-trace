@@ -10,7 +10,7 @@ type SortKey = "priority" | "name" | "overlap";
 const TIER_RANK = { red: 0, amber: 1, green: 2 };
 const STATUS_TEXT = { not_started: "Not started", in_progress: "In progress", submitted: "Submitted" } as const;
 
-export function ClassTable({ rows, base, expectedMin }: { rows: ClassRow[]; base: string; expectedMin: number }) {
+export function ClassTable({ rows, base }: { rows: ClassRow[]; base: string }) {
   const [query, setQuery] = useState("");
   const [unreviewedOnly, setUnreviewedOnly] = useState(false);
   const [sort, setSort] = useState<SortKey>("priority");
@@ -80,10 +80,7 @@ export function ClassTable({ rows, base, expectedMin }: { rows: ClassRow[]; base
                     {STATUS_TEXT[status]}
                     {status === "submitted" && <div className="small muted">{formatDateTime(r.submission!.submitted_at)}</div>}
                   </td>
-                  <td>
-                    {r.stepCount}
-                    {open && r.stepCount < expectedMin && <span className="small muted"> of {expectedMin}</span>}
-                  </td>
+                  <td>{r.stepCount}</td>
                   <td>{open ? <TierChip tier={r.analysis!.tier} pct={r.analysis!.overlapPct} totalWords={r.analysis!.totalWords} /> : <span className="small muted">Not yet submitted</span>}</td>
                   <td>
                     {open ? (r.analysis!.critique.depth === null ? <span className="small muted">No steps</span> : plural(r.analysis!.critique.depth, "word")) : ""}

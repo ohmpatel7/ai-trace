@@ -61,8 +61,8 @@ export default async function SubmissionPage({ params }: { params: Promise<{ ass
             <span>logged student share: {analysis.critique.logged.studentWords} student words vs {analysis.critique.logged.aiWords} AI words in the log</span>
           </div>
           <div className="stat">
-            <strong>{iterations.length} of {assignment.expected_min_iterations}</strong>
-            <span>AI steps logged against the minimum</span>
+            <strong>{iterations.length}</strong>
+            <span>AI steps logged</span>
           </div>
           <div className="stat">
             <strong>{analysis.critique.depth === null ? "–" : analysis.critique.depth}</strong>
@@ -74,9 +74,7 @@ export default async function SubmissionPage({ params }: { params: Promise<{ ass
           </div>
         </div>
         <p className="small muted" style={{ margin: "0 0 10px" }}>
-          A run of {config.n} or more words matching a logged AI output counts as reused. Each highlighted passage below opens the step it came from.
-          Reusing AI wording is permitted in Lane 2; the highlights show where to read the student's critique. Logged student share counts the words the student
-          wrote in the log (prompt, critique, action) against the AI's words. It measures volume only, not authorship, quality or a grade.
+          Overlap counts runs of {config.n}+ words copied from a logged AI output. Student share compares the student&apos;s words in the log with the AI&apos;s. Both measure volume, not quality.
         </p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
           <SettingsPanel />
@@ -92,7 +90,10 @@ export default async function SubmissionPage({ params }: { params: Promise<{ ass
             : `${llm.lookCloser} of ${llm.total} steps to look closer at${llm.stale > 0 ? `, ${llm.stale} changed since the last check` : ""}.`}{" "}
           Claude reads each critique against the AI output it responds to and suggests where a critique looks low-effort or generic. Each step below shows the suggestion and the reason.
         </p>
-        <CheckButton target="submission" id={submission.id} label={llm.checked + llm.stale === 0 ? "Run check" : "Run check again"} configured={llmConfigured()} />
+        {/* The check runs on hand-in, so the button only appears when there is nothing current to show. */}
+        {(llm.checked === 0 || llm.stale > 0) && (
+          <CheckButton target="submission" id={submission.id} label={llm.checked + llm.stale === 0 ? "Run check" : "Run check again"} configured={llmConfigured()} />
+        )}
         <p className="small muted" style={{ margin: "10px 0 0" }}>
           A suggestion for the grader, not a finding. It reads only what the student logged, and the grader decides what it means.
         </p>
