@@ -52,7 +52,7 @@ export default async function SubmissionPage({ params }: { params: Promise<{ ass
         <div className="stats-row">
           <div className="stat">
             <TierChip tier={analysis.tier} pct={analysis.overlapPct} totalWords={analysis.totalWords} />
-            <span>{analysis.totalWords === 0 ? "overlap with logged AI wording" : `${analysis.coveredWords} of ${analysis.totalWords} words match a logged AI output`}</span>
+            <span>{analysis.totalWords === 0 ? "No previous similar work to compare" : `${analysis.coveredWords} of ${analysis.totalWords} words match a logged AI output`}</span>
           </div>
           <div className="stat">
             <strong>{analysis.critique.logged.studentShare === null ? "–" : `${Math.round(analysis.critique.logged.studentShare * 100)}%`}</strong>

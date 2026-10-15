@@ -68,7 +68,7 @@ export default async function PrintPage({ params }: { params: Promise<{ assignme
               const crit = critiqueBy.get(it.id)!;
               return (
                 <tr key={it.id}>
-                  <td>{it.seq}{it.stage && <div className="small muted">{it.stage}</div>}</td>
+                  <td>{it.seq}</td>
                   <td>{it.tool_name}<div className="small muted">{ACTION_LABELS[it.action]}{it.action_note ? `. ${it.action_note}` : ""}</div></td>
                   <td><CritiqueChip label={crit.label} words={crit.words} /></td>
                   <td className="reading" style={{ fontSize: 13 }}>{it.prompt}</td>

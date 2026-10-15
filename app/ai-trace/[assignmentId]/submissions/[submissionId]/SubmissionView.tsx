@@ -54,7 +54,6 @@ export function SubmissionView({ submission, iterations, analysis, llmChecks }: 
                 <summary>
                   <span className={`seq hl-${colourForSeq(it.seq)}`}>{it.seq}</span>
                   <span className="tool">{it.tool_name}</span>
-                  {it.stage && <span className="chip plain">{it.stage}</span>}
                   <span className="chip plain">{ACTION_LABELS[it.action]}</span>
                   <span className="step-row">
                     <CritiqueChip label={crit.label} words={crit.words} />
