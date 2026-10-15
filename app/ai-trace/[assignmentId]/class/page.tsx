@@ -2,11 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/app/components/Shell";
 import { GraderFooter } from "@/app/components/GraderFooter";
+import { CritiqueChip } from "@/app/components/CritiqueChip";
 import { TierChip } from "@/app/components/TierChip";
 import { getViewer } from "@/lib/viewer";
 import { getAssignment, listClassRows } from "@/lib/queries";
 import { median, CRITIQUE_LABELS, CRITIQUE_RULES, type CritiqueLabel } from "@/lib/critique";
 import { formatDateTime, plural } from "@/lib/format";
+import { CRITIQUE_CLASS } from "@/app/components/CritiqueChip";
 import { ClassTable } from "./ClassTable";
 import { CheckButton } from "@/app/components/CheckButton";
 import { llmConfigured } from "@/lib/llm-review";
@@ -124,28 +126,35 @@ export default async function ClassViewPage({ params }: { params: Promise<{ assi
       <section className="card" aria-labelledby="dist-heading" style={{ marginBottom: 20 }}>
         <h2 id="dist-heading">Critique labels across every logged step</h2>
         <p className="small muted" style={{ margin: "0 0 10px" }}>
-          {plural(totalSteps, "step")} logged by {submitted.length} submitted students. Click a number to see which steps carry it.
+          {plural(totalSteps, "step")} logged by {submitted.length} submitted students. Open a label to see which steps carry it.
         </p>
-        <div className="stats-row">
-          {LABEL_ORDER.map((l) => {
-            const items = labelled.filter((x) => x.label === l);
-            return (
-              <details key={l} className="stat stat-expand">
-                <summary title={CRITIQUE_RULES[l]}>
-                  <strong>{items.length}</strong>
-                  <span>{CRITIQUE_LABELS[l].toLowerCase()}</span>
-                </summary>
-                <ul className="small">
-                  {items.length === 0 && <li className="muted">No steps.</li>}
-                  {items.map((x) => (
-                    <li key={x.iterationId}>
-                      <Link href={`${base}/${x.submissionId}#step-${x.iterationId}`}>{x.student}, step {x.seq}</Link>
-                    </li>
-                  ))}
-                </ul>
-              </details>
-            );
-          })}
+        <div className="dist">
+          <div className="bar" role="img" aria-label={LABEL_ORDER.map((l) => `${CRITIQUE_LABELS[l]}: ${labelled.filter((x) => x.label === l).length}`).join(", ")}>
+            {LABEL_ORDER.map((l) => {
+              const n = labelled.filter((x) => x.label === l).length;
+              return n > 0 ? <span key={l} className={CRITIQUE_CLASS[l]} style={{ width: `${(n / totalSteps) * 100}%` }} title={`${CRITIQUE_LABELS[l]}: ${n}`} /> : null;
+            })}
+          </div>
+          <div className="legend">
+            {LABEL_ORDER.map((l) => {
+              const items = labelled.filter((x) => x.label === l);
+              return (
+                <details key={l}>
+                  <summary title={CRITIQUE_RULES[l]}>
+                    <CritiqueChip label={l} /> <strong>{items.length}</strong>
+                  </summary>
+                  <ul>
+                    {items.length === 0 && <li className="muted">No steps.</li>}
+                    {items.map((x) => (
+                      <li key={x.iterationId}>
+                        <Link href={`${base}/${x.submissionId}#step-${x.iterationId}`}>{x.student}, step {x.seq}</Link>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              );
+            })}
+          </div>
         </div>
       </section>
 
