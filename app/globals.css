@@ -158,8 +158,12 @@ tr.dimmed td { color: var(--muted); }
 .steps { display: grid; gap: 12px; }
 .step { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 0; overflow: hidden; scroll-margin-top: 16px; }
 .step.active { border-color: var(--link); box-shadow: 0 0 0 3px var(--accent-soft); }
-.step > summary { cursor: pointer; padding: 12px 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; list-style: none; }
+.step > summary { cursor: pointer; padding: 12px 48px 12px 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; list-style: none; position: relative; }
 .step > summary::-webkit-details-marker { display: none; }
+/* Chevron showing the step opens; it turns to point up when open. */
+.step > summary::after { content: ""; position: absolute; right: 20px; top: 20px; width: 9px; height: 9px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); transition: transform 0.15s ease; }
+.step[open] > summary::after { transform: rotate(-135deg); top: 25px; }
+.step > summary:hover::after { border-color: var(--text); }
 .step > summary .seq { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font-size: 12px; font-weight: 700; border: 1px solid rgba(0,0,0,0.12); background: var(--surface-soft); }
 .step > summary .tool { font-weight: 600; }
 .step > summary .spacer { flex: 1; }
