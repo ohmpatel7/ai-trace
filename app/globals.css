@@ -130,6 +130,9 @@ tr.dimmed td { color: var(--muted); }
 .crit-thin { background: var(--hl-6); border-left: 3px solid var(--line-strong); }
 .crit-sub { background: var(--tier-green-bg); border-left: 3px solid var(--tier-green-line); }
 .dist .bar .crit-no, .dist .bar .crit-accepted, .dist .bar .crit-thin, .dist .bar .crit-sub { border-left: 0; }
+.share-ai { background: var(--tier-amber-bg); border-left: 3px solid var(--tier-amber-line); }
+.share-student { background: var(--tier-green-bg); border-left: 3px solid var(--tier-green-line); }
+.dist .bar .share-ai, .dist .bar .share-student { border-left: 0; }
 
 /* Layouts */
 .two-col { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 20px; align-items: start; }
