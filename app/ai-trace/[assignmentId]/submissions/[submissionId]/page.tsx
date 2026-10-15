@@ -55,8 +55,8 @@ export default async function SubmissionPage({ params }: { params: Promise<{ ass
             <span>{analysis.totalWords === 0 ? "No previous similar work to compare" : `${analysis.coveredWords} of ${analysis.totalWords} words match a logged AI output`}</span>
           </div>
           <div className="stat">
-            <strong>{analysis.critique.logged.studentShare === null ? "–" : `${Math.round(analysis.critique.logged.studentShare * 100)}%`}</strong>
-            <span>logged student share: {analysis.critique.logged.studentWords} student words vs {analysis.critique.logged.aiWords} AI words in the log</span>
+            <strong>{analysis.critique.logged.studentShare === null ? "–" : `${100 - Math.round(analysis.critique.logged.studentShare * 100)}%`}</strong>
+            <span>flagged as AI</span>
           </div>
           <div className="stat">
             <strong>{iterations.length}</strong>
@@ -72,7 +72,7 @@ export default async function SubmissionPage({ params }: { params: Promise<{ ass
           </div>
         </div>
         <p className="small muted" style={{ margin: "0 0 10px" }}>
-          Overlap counts runs of {config.n}+ words copied from a logged AI output. Student share compares the student&apos;s words in the log with the AI&apos;s. Both measure volume, not quality.
+          Overlap counts runs of {config.n}+ words copied from a logged AI output. Flagged as AI is the share of the words in the log written by the AI. Both measure volume, not quality.
         </p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
           <SettingsPanel />

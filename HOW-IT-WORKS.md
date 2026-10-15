@@ -23,7 +23,7 @@ These are plain word counts. No AI is involved in them.
 
 - **Critique label.** Each critique is labelled by its length. Empty is "No critique recorded". Under 15 words on a step the student accepted is "Accepted without evaluation". Under 15 words otherwise is "Thin critique". 15 words or more is "Substantive critique".
 - **Critique depth.** The middle critique length across a student's steps.
-- **Logged student share.** The words the student wrote in the log, compared with the words the AI wrote. It measures volume only, not quality.
+- **Flagged as AI.** The share of the words in a student's log that the AI wrote, compared with the words the student wrote. It measures volume only, not quality.
 - **Overlap.** If a student's handed-in work contains 6 or more words in a row copied from an AI answer they logged, that passage is highlighted and counted. Our dataset doesn't include handed-in work, so this shows "No previous similar work to compare" for those 12 students. Try it with Oliver Bennett.
 
 ## How the LLM check works
