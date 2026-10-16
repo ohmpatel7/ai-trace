@@ -9,7 +9,7 @@ const ROWS: { area: string; state: "Working" | "Simulated" | "Planned"; note: st
   { area: "PDF report", state: "Working", note: "Each submission exports to a standard report (Export PDF report, then Print or save as PDF) with figures, every step, critique labels, LLM check results and the grader note." },
   { area: "Critique labels", state: "Working", note: "Plain word-count rules per step, and critique depth as the median across a submission." },
   { area: "Grader class view and submission view", state: "Working", note: "Sorting, search, the reviewed toggle, private notes, highlights that open the step behind them." },
-    { area: "Shared database", state: "Working", note: "SQLite on the server, so every viewer sees the same records. npm run seed or the reset button rebuilds it." },
+    { area: "Shared database", state: "Working", note: "SQLite on the server, so every viewer sees the same records. The Database page shows it live. npm run seed or the reset button rebuilds it." },
   { area: "Identity", state: "Simulated", note: "The View as switcher picks a user row. There is no sign-in and no permission model beyond the role on that row." },
   { area: "Course shell", state: "Simulated", note: "The navigation reads as an LMS course page, but only the AI Trace tab does anything." },
   { area: "Student and grader data", state: "Simulated", note: "The team's synthetic dataset: 12 fictional students, 3 assignments, 36 logged steps. It records the AI-use log only, not the submitted work." },

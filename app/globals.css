@@ -231,3 +231,9 @@ details.panel dd { margin: 0; color: var(--muted); }
   .tiles { grid-template-columns: 1fr 1fr; }
   .page-title { font-size: 22px; }
 }
+
+/* Database page */
+.db-table { margin-bottom: 14px; }
+.db-table > summary { cursor: pointer; }
+.db-table td { font-size: 13px; vertical-align: top; max-width: 320px; }
+.db-table th { white-space: nowrap; }

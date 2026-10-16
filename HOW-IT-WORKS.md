@@ -15,6 +15,7 @@ All the data is made up. It comes from our team dataset, `ai_trace_synthetic_dat
 - **As a student:** the AI Trace tab is where you log steps. The Assignments tab is where you hand work in. Handing work in locks the log.
 - **As the grader:** open an assignment to see the class, then click a student to see their steps, the figures, the LLM result on each step, and the **Export PDF report** button.
 - **Oliver Bennett** is a blank student. Use him to show the whole flow from scratch.
+- **Database** (bottom of the left menu) shows the live data the app has saved: every logged step, submission, LLM result and grader note, newest first. It also has a link to download the original spreadsheet.
 - **Reset demo data** puts everything back to the starting data.
 
 ## How the numbers work

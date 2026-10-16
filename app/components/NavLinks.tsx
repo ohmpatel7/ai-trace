@@ -15,7 +15,10 @@ export function NavLinks() {
           {item.label}
         </Link>
       ))}
-      <Link href="/about" className="about-link" aria-current={isCurrent("/about") ? "page" : undefined}>
+      <Link href="/database" className="about-link" aria-current={isCurrent("/database") ? "page" : undefined}>
+        Database
+      </Link>
+      <Link href="/about" aria-current={isCurrent("/about") ? "page" : undefined} style={{ color: "var(--muted)", fontSize: 13 }}>
         About this prototype
       </Link>
     </nav>
