@@ -14,7 +14,7 @@ export async function Shell({ children }: { children: React.ReactNode }) {
           <strong>{course.code}</strong>
           <span>{course.semester}</span>
         </div>
-        <NavLinks />
+        <NavLinks isGrader={viewer.role === "grader"} />
       </aside>
       <div className="main">
         <header className="topbar">

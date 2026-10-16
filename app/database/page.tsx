@@ -1,5 +1,6 @@
 import { PageHeader } from "../components/Shell";
 import { getDb } from "@/lib/db";
+import { getViewer } from "@/lib/viewer";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +62,16 @@ function cell(value: unknown): string {
   return String(value);
 }
 
-export default function DatabasePage() {
+export default async function DatabasePage() {
+  const viewer = await getViewer();
+  if (viewer.role !== "grader") {
+    return (
+      <>
+        <PageHeader title="Database" />
+        <div className="card"><p style={{ margin: 0 }}>The database view is for graders. Switch to the grader with View as.</p></div>
+      </>
+    );
+  }
   const db = getDb();
   return (
     <>
