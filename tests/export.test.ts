@@ -35,7 +35,7 @@ describe("data exports", () => {
   it("include a step the moment it is logged, in Excel and SQL", async () => {
     addStep("A brand new prompt logged during the demo");
     const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(await toWorkbook(dumpTables(db)));
+    await workbook.xlsx.load((await toWorkbook(dumpTables(db))) as never);
     const sheet = workbook.getWorksheet("iterations")!;
     const headers = (sheet.getRow(1).values as unknown[]).map(String);
     const prompts = sheet.getColumn(headers.indexOf("prompt")).values.map(String);

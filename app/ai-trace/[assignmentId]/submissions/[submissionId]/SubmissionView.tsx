@@ -59,7 +59,7 @@ export function SubmissionView({ submission, iterations, analysis, llmChecks }: 
                 <summary>
                   <span className={`seq hl-${colourForSeq(it.seq)}`}>{it.seq}</span>
                   <span className="tool">{it.tool_name}</span>
-                  <span className="chip plain">{ACTION_LABELS[it.action]}</span>
+                  {it.action_note && <span className="chip plain">{ACTION_LABELS[it.action]}</span>}
                   <span className="step-row">
                     <CritiqueChip label={crit.label} words={crit.words} />
                     <LlmChip check={llmChecks[it.id]} />
@@ -70,7 +70,7 @@ export function SubmissionView({ submission, iterations, analysis, llmChecks }: 
                   <div><h4>Prompt</h4><p className="reading">{it.prompt}</p></div>
                   <div><h4>AI output</h4><p className="reading">{it.ai_output}</p></div>
                   <div><h4>Student's critique</h4><p className="reading">{it.critique || <span className="muted">No critique recorded.</span>}</p></div>
-                  <div><h4>What they did next</h4><p className="reading">{ACTION_LABELS[it.action]}{it.action_note ? `. ${it.action_note}` : ""}</p></div>
+                  {it.action_note && <div><h4>What they did next</h4><p className="reading">{ACTION_LABELS[it.action]}. {it.action_note}</p></div>}
                   {llmChecks[it.id]?.current && (
                     <div><h4>LLM reflection check (suggestion)</h4><p className="small" style={{ margin: 0 }}>{llmChecks[it.id].reason}</p></div>
                   )}

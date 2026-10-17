@@ -54,6 +54,7 @@ export interface StepInput {
 function cleanStep(input: StepInput): StepInput {
   if (!ACTIONS.includes(input.action)) throw new Error("Unknown action.");
   if (!input.prompt.trim() || !input.ai_output.trim()) throw new Error("A step needs at least a prompt and the AI output.");
+  if (!input.critique.trim()) throw new Error("Your critique is required.");
   return {
     tool_name: input.tool_name.trim() || "Unnamed tool",
     prompt: input.prompt.trim(),

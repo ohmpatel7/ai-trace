@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { StepInput } from "@/app/ai-trace/actions";
 import type { Iteration } from "@/lib/types";
-import { ACTION_LABELS, CRITIQUE_LABELS, CRITIQUE_RULES, critiqueLabel, type StepAction } from "@/lib/critique";
+import { CRITIQUE_LABELS, CRITIQUE_RULES, critiqueLabel } from "@/lib/critique";
 import { countWords } from "@/lib/overlap";
 import { config } from "@/lib/config";
 
@@ -33,7 +33,7 @@ export function StepDialog({ open, step, busy, onCancel, onSave }: Props) {
   const cueClass = label === "substantive_critique" ? "good" : "warn";
   const cueText =
     label === "no_critique"
-      ? `No critique yet. Say what you checked, what was wrong or right, and why you did what you did next. ${config.thinWords} words or more reads as substantive.`
+      ? `A critique is required. Say what you checked, what was wrong or right, and why. ${config.thinWords} words or more reads as substantive.`
       : label === "substantive_critique"
         ? `${words} words. ${CRITIQUE_LABELS[label]}.`
         : `${words} words. This reads as "${CRITIQUE_LABELS[label]}": ${CRITIQUE_RULES[label]} Add what you checked or changed.`;
@@ -63,22 +63,14 @@ export function StepDialog({ open, step, busy, onCancel, onSave }: Props) {
           <textarea className="reading" rows={6} value={form.ai_output} onChange={set("ai_output")} required />
         </label>
         <label className="field">
-          Your critique <span className="hint">What did you check, what was wrong or right, and why?</span>
-          <textarea className="reading" rows={4} value={form.critique} onChange={set("critique")} />
+          <span>
+            Your critique <span className="required-star" aria-hidden="true">*</span>
+            <span className="visually-hidden"> (required)</span>
+          </span>
+          <span className="hint">What did you check, what was wrong or right, and why?</span>
+          <textarea className="reading" rows={4} value={form.critique} onChange={set("critique")} required />
         </label>
         <div className={`cue ${cueClass}`} aria-live="polite">{cueText}</div>
-        <label className="field">
-          What did you do next?
-          <select value={form.action} onChange={set("action")}>
-            {(Object.keys(ACTION_LABELS) as StepAction[]).map((a) => (
-              <option key={a} value={a}>{ACTION_LABELS[a]}</option>
-            ))}
-          </select>
-        </label>
-        <label className="field">
-          Note <span className="hint">Optional. For example, what you changed or where you checked it.</span>
-          <input type="text" value={form.action_note} onChange={set("action_note")} />
-        </label>
         <div className="dialog-actions">
           <button type="button" className="btn" onClick={onCancel} disabled={busy}>Cancel</button>
           <button type="submit" className="btn primary" disabled={busy}>{busy ? "Saving…" : step ? "Save changes" : "Log step"}</button>

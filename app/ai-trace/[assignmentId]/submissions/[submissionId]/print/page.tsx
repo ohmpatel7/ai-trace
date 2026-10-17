@@ -69,7 +69,7 @@ export default async function PrintPage({ params }: { params: Promise<{ assignme
               return (
                 <tr key={it.id}>
                   <td>{it.seq}</td>
-                  <td>{it.tool_name}<div className="small muted">{ACTION_LABELS[it.action]}{it.action_note ? `. ${it.action_note}` : ""}</div></td>
+                  <td>{it.tool_name}{it.action_note && <div className="small muted">{ACTION_LABELS[it.action]}. {it.action_note}</div>}</td>
                   <td><CritiqueChip label={crit.label} words={crit.words} /></td>
                   <td className="reading" style={{ fontSize: 13 }}>{it.prompt}</td>
                   <td className="reading" style={{ fontSize: 13 }}>{it.critique || <span className="muted">No critique recorded.</span>}</td>

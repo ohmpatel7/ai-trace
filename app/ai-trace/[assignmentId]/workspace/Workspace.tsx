@@ -66,7 +66,7 @@ export function Workspace({ assignment, initial }: { assignment: Assignment; ini
             <summary>
               <span className="seq">{it.seq}</span>
               <span className="tool">{it.tool_name}</span>
-              <span className="chip plain">{ACTION_LABELS[it.action]}</span>
+              {it.action_note && <span className="chip plain">{ACTION_LABELS[it.action]}</span>}
               <span className="spacer" />
               <span className="small muted">{formatDateTime(it.created_at)}</span>
             </summary>
@@ -74,7 +74,7 @@ export function Workspace({ assignment, initial }: { assignment: Assignment; ini
               <div><h4>Prompt</h4><p className="reading">{it.prompt}</p></div>
               <div><h4>AI output</h4><p className="reading">{it.ai_output}</p></div>
               <div><h4>Your critique</h4><p className="reading">{it.critique || <span className="muted">No critique recorded.</span>}</p></div>
-              <div><h4>What you did next</h4><p className="reading">{ACTION_LABELS[it.action]}{it.action_note ? `. ${it.action_note}` : ""}</p></div>
+              {it.action_note && <div><h4>What you did next</h4><p className="reading">{ACTION_LABELS[it.action]}. {it.action_note}</p></div>}
               {!locked && (
                 <div className="actions">
                   <button type="button" className="btn small" onClick={() => setDialogStep(it)} disabled={pending}>Edit</button>
