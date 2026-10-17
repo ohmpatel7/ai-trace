@@ -38,6 +38,16 @@ The overlap, tier and critique figures need no environment variables or external
 - It is advisory. The grader decides what a suggestion means, and the wording never implies misconduct.
 - It sends logged steps to Anthropic's API. Use synthetic data only unless the university has approved otherwise.
 
+## Getting the data out
+
+As the grader, the **Database** page shows every table live, runs read-only SQL queries, and downloads all data as Excel, SQL or the SQLite file. From the terminal:
+
+```bash
+npm run export
+```
+
+writes `exports/ai-trace-data.xlsx`, `exports/ai-trace-data.sql` and `exports/ai-trace.db` from the current database.
+
 ## Stack
 
 Next.js (App Router) with TypeScript, SQLite through `better-sqlite3` with a plain SQL schema, plain CSS with variables, Vitest. No auth library, no ORM, no component library.
@@ -52,6 +62,7 @@ Next.js (App Router) with TypeScript, SQLite through `better-sqlite3` with a pla
 | `lib/overlap/index.ts` | Typed wrapper around the overlap calculation. |
 | `lib/critique.ts` | Critique labels and critique depth. |
 | `lib/config.ts` | Every threshold in one place. |
+| `lib/export.ts` | Excel and SQL exports and the read-only query runner. |
 | `lib/llm-review.ts` | The LLM reflection check: prompt, structured output schema, caching by step hash. |
 | `lib/analysis.ts` | Computes and caches overlap and critique results per submission. Never writes to student records. |
 | `lib/seed.ts`, `scripts/seed.ts` | Seed the database. |

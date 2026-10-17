@@ -1,6 +1,7 @@
 import { PageHeader } from "../components/Shell";
 import { getDb } from "@/lib/db";
 import { getViewer } from "@/lib/viewer";
+import { QueryBox } from "./QueryBox";
 
 export const dynamic = "force-dynamic";
 
@@ -84,10 +85,19 @@ export default async function DatabasePage() {
           The app saves everything in one SQLite database file, <code>data/ai-trace.db</code>, on the computer running it. It was loaded from the team&apos;s
           synthetic dataset, and every step logged or note saved since is added to it.
         </p>
-        <p style={{ margin: 0 }}>
-          <a className="btn small" href="/database/dataset" download>Download the original dataset (.xlsx)</a>
+        <p style={{ margin: "0 0 8px" }}>Download everything to open outside the app:</p>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <a className="btn primary small" href="/database/export/xlsx" download>All data as Excel (.xlsx)</a>
+          <a className="btn small" href="/database/export/sql" download>All data as SQL (.sql)</a>
+          <a className="btn small" href="/database/export/db" download>SQLite database file (.db)</a>
+          <a className="btn small" href="/database/dataset" download>Original dataset (.xlsx)</a>
+        </div>
+        <p className="small muted" style={{ margin: "8px 0 0" }}>
+          The Excel file has one sheet per table. The SQL file holds the schema and every row and loads into SQLite. The .db file opens in DB Browser for SQLite or any SQLite tool.
         </p>
       </div>
+
+      <QueryBox />
       {TABLES.map((table) => {
         const rows = db.prepare(table.sql).all() as Record<string, unknown>[];
         const columns = rows.length > 0 ? Object.keys(rows[0]) : [];
