@@ -29,7 +29,22 @@ export function dumpTables(db: Database.Database): TableDump[] {
   });
 }
 
-export async function toWorkbook(tables: TableDump[]): Promise<Buffer> {
+/** Every logged step with the student's name and assignment, newest first: the easiest sheet to read. */
+export function loggedSteps(db: Database.Database): TableDump {
+  const rows = db
+    .prepare(
+      `SELECT i.id AS step_id, u.name AS student, a.title AS assignment, i.seq AS step, i.tool_name AS tool,
+              i.prompt, i.ai_output, i.critique, i.created_at AS logged_at
+       FROM iterations i JOIN submissions s ON s.id = i.submission_id JOIN users u ON u.id = s.student_id JOIN assignments a ON a.id = s.assignment_id
+       ORDER BY i.created_at DESC, i.id DESC`,
+    )
+    .all() as Record<string, unknown>[];
+  const nz = new Intl.DateTimeFormat("en-NZ", { dateStyle: "medium", timeStyle: "short", timeZone: "Pacific/Auckland" });
+  for (const row of rows) row.logged_at = nz.format(new Date(String(row.logged_at)));
+  return { name: "Logged AI steps", columns: ["step_id", "student", "assignment", "step", "tool", "prompt", "ai_output", "critique", "logged_at"], rows };
+}
+
+export async function toWorkbook(tables: TableDump[], readable?: TableDump): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "AI Trace (INFOMGMT 399 Team 12)";
   const about = workbook.addWorksheet("About");
@@ -39,17 +54,20 @@ export async function toWorkbook(tables: TableDump[]): Promise<Buffer> {
     ["Exported", new Date().toISOString()],
     ["Source", "data/ai-trace.db (SQLite), the live database behind the AI Trace prototype"],
     ["Data", "Synthetic. Seeded from ai_trace_synthetic_dataset.xlsx; later rows were added through the app."],
-    ["Sheets", "One sheet per database table, with every column and row."],
+    ["Sheets", "'Logged AI steps' lists every step with the student's name, newest first. The other sheets are the database tables, with every column and row."],
   ]);
   about.getRow(1).font = { bold: true, size: 14 };
-  for (const table of tables) {
+  for (const table of readable ? [readable, ...tables] : tables) {
     const sheet = workbook.addWorksheet(table.name);
-    sheet.columns = table.columns.map((c) => ({ header: c, key: c, width: Math.min(60, Math.max(12, c.length + 4)) }));
+    const wide = ["prompt", "ai_output", "critique", "final_text", "instructions", "reason", "note"];
+    sheet.columns = table.columns.map((c) => ({ header: c, key: c, width: wide.includes(c) ? 50 : Math.min(40, Math.max(12, c.length + 6)) }));
     for (const row of table.rows) sheet.addRow(row);
     sheet.getRow(1).font = { bold: true };
     sheet.views = [{ state: "frozen", ySplit: 1 }];
     sheet.eachRow((row) => row.eachCell((cell) => { cell.alignment = { vertical: "top", wrapText: true }; }));
   }
+  // Open on the readable steps sheet when there is one.
+  if (readable) workbook.views = [{ x: 0, y: 0, width: 20000, height: 12000, firstSheet: 0, activeTab: 1, visibility: "visible" }];
   return Buffer.from(await workbook.xlsx.writeBuffer());
 }
 

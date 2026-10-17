@@ -93,7 +93,7 @@ export default async function DatabasePage() {
           <a className="btn small" href="/database/dataset" download>Original dataset (.xlsx)</a>
         </div>
         <p className="small muted" style={{ margin: "8px 0 0" }}>
-          The Excel file has one sheet per table. The SQL file holds the schema and every row and loads into SQLite. The .db file opens in DB Browser for SQLite or any SQLite tool.
+          The Excel file opens on a 'Logged AI steps' sheet with each student's name, newest first, followed by one sheet per table. The SQL file holds the schema and every row and loads into SQLite. The .db file opens in DB Browser for SQLite or any SQLite tool.
         </p>
       </div>
 

@@ -5,13 +5,13 @@
 import fs from "node:fs";
 import path from "node:path";
 import { DB_PATH, openDatabase } from "../lib/db";
-import { dumpTables, toSqlDump, toWorkbook } from "../lib/export";
+import { dumpTables, loggedSteps, toSqlDump, toWorkbook } from "../lib/export";
 
 const outDir = path.join(process.cwd(), "exports");
 fs.mkdirSync(outDir, { recursive: true });
 const db = openDatabase(DB_PATH);
 const tables = dumpTables(db);
-fs.writeFileSync(path.join(outDir, "ai-trace-data.xlsx"), await toWorkbook(tables));
+fs.writeFileSync(path.join(outDir, "ai-trace-data.xlsx"), await toWorkbook(tables, loggedSteps(db)));
 fs.writeFileSync(path.join(outDir, "ai-trace-data.sql"), toSqlDump(db));
 fs.writeFileSync(path.join(outDir, "ai-trace.db"), db.serialize());
 db.close();
