@@ -20,6 +20,8 @@ const EMPTY: StepInput = { tool_name: "", prompt: "", ai_output: "", critique: "
 export function StepDialog({ open, step, busy, onCancel, onSave }: Props) {
   const ref = useRef<HTMLDialogElement>(null);
   const [form, setForm] = useState<StepInput>(step ? { ...step } : EMPTY);
+  const [missingCritique, setMissingCritique] = useState(false);
+  const critiqueRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     const dialog = ref.current;
@@ -46,6 +48,12 @@ export function StepDialog({ open, step, busy, onCancel, onSave }: Props) {
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          // Shown in the form rather than as a browser bubble, so it is visible to everyone, including in screen recordings.
+          if (!form.critique.trim()) {
+            setMissingCritique(true);
+            critiqueRef.current?.focus();
+            return;
+          }
           onSave(form);
         }}
       >
@@ -68,7 +76,10 @@ export function StepDialog({ open, step, busy, onCancel, onSave }: Props) {
             <span className="visually-hidden"> (required)</span>
           </span>
           <span className="hint">What did you check, what was wrong or right, and why?</span>
-          <textarea className="reading" rows={4} value={form.critique} onChange={set("critique")} required />
+          <textarea ref={critiqueRef} className="reading" rows={4} value={form.critique} onChange={(e) => { setMissingCritique(false); set("critique")(e); }}
+            required onInvalid={(e) => { e.preventDefault(); setMissingCritique(true); }} aria-invalid={missingCritique || undefined} aria-describedby={missingCritique ? "critique-error" : undefined}
+            style={missingCritique ? { borderColor: "var(--tier-red-line)", boxShadow: "0 0 0 3px var(--tier-red-bg)" } : undefined} />
+          {missingCritique && <span id="critique-error" role="alert" className="field-error">Your critique is required. The step was not saved.</span>}
         </label>
         <div className={`cue ${cueClass}`} aria-live="polite">{cueText}</div>
         <div className="dialog-actions">
