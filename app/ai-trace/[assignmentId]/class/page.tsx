@@ -15,6 +15,9 @@ import { llmConfigured } from "@/lib/llm-review";
 
 const LABEL_ORDER: CritiqueLabel[] = ["substantive_critique", "thin_critique", "accepted_without_evaluation", "no_critique"];
 
+// The LLM check can take a while for a whole class.
+export const maxDuration = 120;
+
 export default async function ClassViewPage({ params }: { params: Promise<{ assignmentId: string }> }) {
   const { assignmentId } = await params;
   const assignment = getAssignment(Number(assignmentId));

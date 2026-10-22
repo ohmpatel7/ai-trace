@@ -5,8 +5,8 @@ import { getCourse } from "@/lib/queries";
 import { getViewer } from "@/lib/viewer";
 
 export default async function HomePage() {
-  const course = getCourse();
   const viewer = await getViewer();
+  const course = getCourse();
   return (
     <>
       <PageHeader title={`${course.code}: ${course.name}`} subtitle={course.semester} />

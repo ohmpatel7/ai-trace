@@ -5,7 +5,7 @@
  */
 import Database from "better-sqlite3";
 import ExcelJS from "exceljs";
-import { DB_PATH } from "./db";
+import { currentDbPath } from "./db";
 
 export interface TableDump {
   name: string;
@@ -111,7 +111,7 @@ const MAX_ROWS = 500;
  * (SELECT, WITH ... SELECT, PRAGMA reads) are accepted; anything that would
  * change data is refused before it runs.
  */
-export function runReadOnlyQuery(sql: string, filePath: string = DB_PATH): QueryResult {
+export function runReadOnlyQuery(sql: string, filePath: string = currentDbPath()): QueryResult {
   const db = new Database(filePath, { readonly: true, fileMustExist: true });
   try {
     const statement = db.prepare(sql.trim().replace(/;\s*$/, ""));

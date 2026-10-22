@@ -11,6 +11,7 @@ import { getDb, now } from "@/lib/db";
 import { recomputeAnalysis } from "@/lib/analysis";
 import { llmConfigured, runReflectionCheck } from "@/lib/llm-review";
 import { seedDatabase } from "@/lib/seed";
+import { persistDb, syncDb } from "@/lib/remote-db";
 import { getViewer, VIEWER_COOKIE } from "@/lib/viewer";
 import { getOrCreateSubmission, getSubmission, listIterations } from "@/lib/queries";
 import type { StepAction } from "@/lib/critique";
@@ -25,7 +26,9 @@ export async function setViewer(userId: number): Promise<void> {
 }
 
 export async function resetDemoData(): Promise<void> {
+  await syncDb();
   seedDatabase(getDb());
+  await persistDb();
   revalidatePath("/", "layout");
 }
 
@@ -79,6 +82,7 @@ export async function createStep(submissionId: number, input: StepInput): Promis
   // Logging a step means the assignment is under way, even though the work itself is handed in elsewhere.
   db.prepare("UPDATE submissions SET status = 'in_progress', updated_at = ? WHERE id = ?").run(stamp, submissionId);
   recomputeAnalysis(db, submissionId);
+  await persistDb();
   revalidatePath("/ai-trace");
   return workspaceState(submissionId);
 }
@@ -92,6 +96,7 @@ export async function updateStep(submissionId: number, iterationId: number, inpu
      WHERE id = ? AND submission_id = ?`,
   ).run(step.tool_name, step.prompt, step.ai_output, step.critique, step.action, step.action_note, step.stage, now(), iterationId, submissionId);
   recomputeAnalysis(db, submissionId);
+  await persistDb();
   return workspaceState(submissionId);
 }
 
@@ -105,6 +110,7 @@ export async function deleteStep(submissionId: number, iterationId: number): Pro
   });
   renumber();
   recomputeAnalysis(db, submissionId);
+  await persistDb();
   revalidatePath("/ai-trace");
   return workspaceState(submissionId);
 }
@@ -124,7 +130,7 @@ export async function submitWork(assignmentId: number, finalText: string): Promi
   db.prepare("UPDATE submissions SET final_text = ?, status = 'submitted', submitted_at = ?, updated_at = ? WHERE id = ?").run(finalText.trim(), stamp, stamp, submission.id);
   recomputeAnalysis(db, submission.id);
   // The reflection check runs as work comes in. A failure here never blocks the hand-in;
-  // the grader can run it again from the submission view.
+  // the grader can run it again with "Check all submitted work" on the class view.
   if (llmConfigured()) {
     try {
       await runReflectionCheck(db, submission.id, listIterations(submission.id));
@@ -132,6 +138,7 @@ export async function submitWork(assignmentId: number, finalText: string): Promi
       console.error("LLM reflection check failed on submit:", (err as Error).message);
     }
   }
+  await persistDb();
   revalidatePath("/", "layout");
   return getSubmission(submission.id)!;
 }
@@ -162,6 +169,7 @@ export async function checkSubmission(submissionId: number): Promise<CheckOutcom
   if (!submission || submission.status !== "submitted") return { ok: false, message: "Only submitted work can be checked." };
   try {
     const reviews = await runReflectionCheck(getDb(), submissionId, listIterations(submissionId));
+    await persistDb();
     revalidatePath("/ai-trace", "layout");
     const lookCloser = reviews.filter((r) => r.verdict === "look_closer").length;
     return { ok: true, message: lookCloser === 0 ? "Checked. Every critique looks considered." : `Checked. ${lookCloser} step${lookCloser === 1 ? "" : "s"} to look closer at.` };
@@ -174,8 +182,7 @@ export async function checkSubmission(submissionId: number): Promise<CheckOutcom
 export async function checkAssignment(assignmentId: number): Promise<CheckOutcome> {
   await requireGrader();
   if (!llmConfigured()) return { ok: false, message: "Add ANTHROPIC_API_KEY to .env.local and restart the server to turn the check on." };
-  const db = getDb();
-  const ids = (db.prepare("SELECT id FROM submissions WHERE assignment_id = ? AND status = 'submitted' ORDER BY id").all(assignmentId) as { id: number }[]).map((r) => r.id);
+  const ids = (getDb().prepare("SELECT id FROM submissions WHERE assignment_id = ? AND status = 'submitted' ORDER BY id").all(assignmentId) as { id: number }[]).map((r) => r.id);
   let done = 0;
   const failures: string[] = [];
   // Three at a time keeps the class check quick without tripping rate limits.
@@ -183,7 +190,7 @@ export async function checkAssignment(assignmentId: number): Promise<CheckOutcom
     await Promise.all(
       ids.slice(i, i + 3).map(async (id) => {
         try {
-          await runReflectionCheck(db, id, listIterations(id));
+          await runReflectionCheck(getDb(), id, listIterations(id));
           done += 1;
         } catch (err) {
           failures.push(describeFailure(err));
@@ -191,6 +198,7 @@ export async function checkAssignment(assignmentId: number): Promise<CheckOutcom
       }),
     );
   }
+  await persistDb();
   revalidatePath("/ai-trace", "layout");
   if (failures.length > 0) return { ok: false, message: `Checked ${done} of ${ids.length}. ${failures[0]}` };
   return { ok: true, message: `Checked ${done} submission${done === 1 ? "" : "s"}.` };
@@ -205,5 +213,6 @@ export async function saveReview(submissionId: number, note: string, reviewed: b
        ON CONFLICT(submission_id, grader_id) DO UPDATE SET reviewed = excluded.reviewed, note = excluded.note, updated_at = excluded.updated_at`,
     )
     .run(submissionId, viewer.id, reviewed ? 1 : 0, note.trim(), now());
+  await persistDb();
   revalidatePath("/ai-trace", "layout");
 }

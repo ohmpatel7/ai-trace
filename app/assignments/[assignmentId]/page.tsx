@@ -7,6 +7,9 @@ import { formatDateTime, plural } from "@/lib/format";
 import { SubmitWorkForm } from "./SubmitWorkForm";
 
 /** Simulated LMS hand-in page. In a real course this would be the LMS's own file upload. */
+// The LLM check can take a while for a whole class.
+export const maxDuration = 120;
+
 export default async function AssignmentPage({ params }: { params: Promise<{ assignmentId: string }> }) {
   const { assignmentId } = await params;
   const assignment = getAssignment(Number(assignmentId));

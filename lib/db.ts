@@ -9,7 +9,20 @@ import path from "node:path";
 export const DB_PATH = process.env.AI_TRACE_DB ?? path.join(process.cwd(), "data", "ai-trace.db");
 const SCHEMA_PATH = path.join(process.cwd(), "db", "schema.sql");
 
-type GlobalWithDb = typeof globalThis & { __aiTraceDb?: Database.Database };
+type GlobalWithDb = typeof globalThis & { __aiTraceDb?: Database.Database; __aiTraceDbPath?: string };
+
+/**
+ * True on the hosted site, where the database file lives in Vercel Blob and is
+ * copied to /tmp (see lib/remote-db.ts). Locally this is false and nothing changes.
+ */
+export function isRemote(): boolean {
+  return process.env.AI_TRACE_REMOTE === "blob" && Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+}
+
+/** The file the shared connection is using right now. */
+export function currentDbPath(): string {
+  return (globalThis as GlobalWithDb).__aiTraceDbPath ?? DB_PATH;
+}
 
 export function openDatabase(filePath: string = DB_PATH): Database.Database {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -28,8 +41,36 @@ export function openDatabase(filePath: string = DB_PATH): Database.Database {
 /** Shared connection, cached across Next.js hot reloads. */
 export function getDb(): Database.Database {
   const g = globalThis as GlobalWithDb;
-  if (!g.__aiTraceDb) g.__aiTraceDb = openDatabase();
+  if (!g.__aiTraceDb) {
+    const file = currentDbPath();
+    // On a fresh hosted instance, start from the bundled snapshot until the Blob copy arrives.
+    const snapshot = path.join(process.cwd(), "deploy", "initial.db");
+    if (isRemote() && !fs.existsSync(file) && fs.existsSync(snapshot)) {
+      fs.mkdirSync(path.dirname(file), { recursive: true });
+      fs.copyFileSync(snapshot, file);
+    }
+    g.__aiTraceDb = openDatabase(file);
+    g.__aiTraceDbPath = file;
+  }
   return g.__aiTraceDb;
+}
+
+/**
+ * Points the shared connection at a newer copy of the database. The old
+ * connection stays open briefly so a request already using it can finish.
+ */
+export function swapDatabase(file: string): void {
+  const g = globalThis as GlobalWithDb;
+  const old = g.__aiTraceDb;
+  const oldPath = g.__aiTraceDbPath;
+  g.__aiTraceDb = openDatabase(file);
+  g.__aiTraceDbPath = file;
+  if (old) {
+    setTimeout(() => {
+      old.close();
+      if (oldPath && oldPath !== file) for (const suffix of ["", "-wal", "-shm"]) fs.rmSync(oldPath + suffix, { force: true });
+    }, 30_000).unref?.();
+  }
 }
 
 export function now(): string {
