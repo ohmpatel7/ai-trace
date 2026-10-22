@@ -40,7 +40,7 @@ The overlap, tier and critique figures need no environment variables or external
 
 ## Hosting it
 
-To put it on a live site with a persistent database, follow [DEPLOY.md](DEPLOY.md) (Railway, using the included `Dockerfile`).
+The live site is https://ai-trace.webtag.co.nz, hosted by WebTag on Vercel with the database kept in Vercel Blob. [DEPLOY.md](DEPLOY.md) explains the setup and how to update it. The included `Dockerfile` also runs it on any host with a persistent disk.
 
 ## Getting the data out
 

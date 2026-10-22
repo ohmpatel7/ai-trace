@@ -1,38 +1,50 @@
-# Putting AI Trace on a live site
+# The live site
 
-AI Trace saves everything in a SQLite file, so it needs a host with a **persistent disk**. Serverless hosts like Vercel or Netlify reset their files, so saves would vanish. These steps use **Railway**, which builds the included `Dockerfile` straight from GitHub and offers persistent volumes. Check Railway's current pricing when you sign up; a small app like this costs a few dollars a month at most.
+AI Trace is hosted by WebTag on Vercel.
 
-Use your **personal** GitHub account (ohmpatel7), not a WebTag one.
+| | |
+|---|---|
+| Live URL | https://ai-trace.webtag.co.nz |
+| GitHub repo that deploys | `webtagosd/ai-trace` (branch `main`) |
+| Vercel project | `ai-trace` in the `webtagosd` team, region Sydney (`syd1`) |
+| Database storage | private Vercel Blob store `ai-trace-db` (Sydney) |
 
-## Steps (about 10 minutes, all in the browser)
+The personal repo `ohmpatel7/ai-trace` still exists for the team. Only pushes to `webtagosd/ai-trace` change the live site.
 
-1. Go to https://railway.com and **log in with GitHub** as ohmpatel7.
-2. **New Project**, then **Deploy from GitHub repo**, then pick `ohmpatel7/ai-trace`. If it isn't listed, use "Configure GitHub App" to give Railway access to that private repo.
-3. Railway finds the `Dockerfile` and starts building. Let it run; the first build takes a few minutes.
-4. **Add a volume** so data survives restarts: on the canvas, right-click the service (or press Cmd+K and search "volume"), choose **Attach volume**, and set the mount path to `/data`.
-5. Open the service's **Variables** tab and add:
+## How the database works when hosted
 
-   | Name | Value |
-   |---|---|
-   | `AI_TRACE_DB` | `/data/ai-trace.db` |
-   | `ANTHROPIC_API_KEY` | your own key (only needed for the LLM check) |
-   | `SITE_PASSWORD` | a password you choose, to share with the team and markers |
+Vercel's disk is temporary and differs between server instances, so a plain SQLite file would lose saves. When `AI_TRACE_REMOTE=blob` is set, `lib/remote-db.ts` keeps the file in Vercel Blob:
 
-6. **Settings**, then **Networking**, then **Generate Domain**. If it asks for a port, use `3000`.
-7. Railway redeploys with the new settings. Open the domain it gives you. The browser asks for a username and password: type anything as the username, and the `SITE_PASSWORD` as the password.
+- Before each request, the server asks Blob whether the stored database changed and downloads it if so. An unchanged file costs one small "not modified" check.
+- After each save (logging a step, handing in work, notes, LLM checks, reset), the server uploads the whole file, about 120 KB.
+- The very first time, there is nothing in Blob yet, so it starts from `deploy/initial.db`, a snapshot that includes the LLM results and the demo video's steps.
 
-## What happens on first boot
+Limit: if two people save at the same moment on different server instances, the later upload wins and the other save is lost. That's fine for a demo with a few users.
 
-`scripts/start.sh` looks for the database at `AI_TRACE_DB`. On the very first boot it isn't there, so it copies `deploy/initial.db`, a snapshot of the local data including the LLM check results and the demo video's steps. After that the file on the volume is the live database, and every save persists across restarts and redeploys.
+Locally none of this runs. `npm run dev` still uses `data/ai-trace.db` as before.
 
-- **Reset demo data** on the live site rebuilds it from the team spreadsheet, which has no LLM results. Press **Check all submitted work** on each class view afterwards to bring them back (needs the API key).
-- To start over from the snapshot instead, delete the volume and attach a new one.
-- Without the volume and `AI_TRACE_DB`, the site still runs, but data resets on every deploy.
+## Settings on the Vercel project
+
+| Variable | Purpose |
+|---|---|
+| `AI_TRACE_REMOTE=blob` | switches on Blob storage |
+| `AI_TRACE_DB=/tmp/ai-trace.db` | where the working copy lives on the server |
+| `BLOB_READ_WRITE_TOKEN` | added automatically by the Blob store |
+| `SITE_PASSWORD` | the password the site asks for (sensitive) |
+| `ANTHROPIC_API_KEY` | for the LLM check (sensitive) |
 
 ## Updating the live site
 
-Push to `main` on GitHub. Railway rebuilds and redeploys automatically, and the data on the volume is kept.
+Push to `main` on `webtagosd/ai-trace`:
+
+```bash
+git push webtag main
+```
+
+Vercel builds and deploys automatically. The data in Blob is kept across deploys.
+
+To start the live data over from the snapshot, delete the blob `ai-trace/ai-trace.db` in the `ai-trace-db` store (Vercel dashboard, Storage). The next visit republishes `deploy/initial.db`. **Reset demo data** on the site rebuilds from the team spreadsheet instead, which has no LLM results.
 
 ## Why there's a password
 
-Anyone with the link can switch "View as" to the grader, see every record, press Reset demo data, and hand in work that triggers paid LLM calls on your API key. `SITE_PASSWORD` keeps the site to people you give it to. Leave it unset only if that's fine.
+Anyone with the link could switch to the grader, see every record, reset the data, or hand in work that triggers paid LLM calls on the API key. The browser asks for a username (type anything) and the `SITE_PASSWORD`.
