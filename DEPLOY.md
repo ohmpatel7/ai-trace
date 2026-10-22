@@ -43,6 +43,8 @@ git push webtag main
 
 Vercel builds and deploys automatically. The data in Blob is kept across deploys.
 
+**Commit as WebTag.** Vercel only deploys commits whose author belongs to the WebTag Vercel team. This repo is set to `Webtag <info@webtag.co.nz>` (`git config user.email`). A commit authored by a personal GitHub account shows "Git author must have access to the project on Vercel" and does not deploy.
+
 To start the live data over from the snapshot, delete the blob `ai-trace/ai-trace.db` in the `ai-trace-db` store (Vercel dashboard, Storage). The next visit republishes `deploy/initial.db`. **Reset demo data** on the site rebuilds from the team spreadsheet instead, which has no LLM results.
 
 ## Why there's a password
