@@ -38,6 +38,10 @@ The overlap, tier and critique figures need no environment variables or external
 - It is advisory. The grader decides what a suggestion means, and the wording never implies misconduct.
 - It sends logged steps to Anthropic's API. Use synthetic data only unless the university has approved otherwise.
 
+## Hosting it
+
+To put it on a live site with a persistent database, follow [DEPLOY.md](DEPLOY.md) (Railway, using the included `Dockerfile`).
+
 ## Getting the data out
 
 As the grader, the **Database** page shows every table live, runs read-only SQL queries, and downloads all data as Excel, SQL or the SQLite file. From the terminal:
