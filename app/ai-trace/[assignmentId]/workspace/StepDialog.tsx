@@ -11,13 +11,15 @@ interface Props {
   open: boolean;
   step: Iteration | null;
   busy: boolean;
+  /** A save that failed on the server. The form keeps everything typed so the student can retry. */
+  error: string | null;
   onCancel: () => void;
   onSave: (input: StepInput) => void;
 }
 
 const EMPTY: StepInput = { tool_name: "", prompt: "", ai_output: "", critique: "", action: "edited", action_note: "", stage: "" };
 
-export function StepDialog({ open, step, busy, onCancel, onSave }: Props) {
+export function StepDialog({ open, step, busy, error, onCancel, onSave }: Props) {
   const ref = useRef<HTMLDialogElement>(null);
   const [form, setForm] = useState<StepInput>(step ? { ...step } : EMPTY);
   const [missingCritique, setMissingCritique] = useState(false);
@@ -82,6 +84,7 @@ export function StepDialog({ open, step, busy, onCancel, onSave }: Props) {
           {missingCritique && <span id="critique-error" role="alert" className="field-error">Your critique is required. The step was not saved.</span>}
         </label>
         <div className={`cue ${cueClass}`} aria-live="polite">{cueText}</div>
+        {error && <p role="alert" className="field-error" style={{ margin: "12px 0 0" }}>{error}</p>}
         <div className="dialog-actions">
           <button type="button" className="btn" onClick={onCancel} disabled={busy}>Cancel</button>
           <button type="submit" className="btn primary" disabled={busy}>{busy ? "Saving…" : step ? "Save changes" : "Log step"}</button>

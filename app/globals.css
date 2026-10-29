@@ -201,16 +201,26 @@ details.panel dd { margin: 0; color: var(--muted); }
 
 /* Print */
 .print-page { font-family: var(--sans); }
-.print-page table { min-width: 0; table-layout: fixed; }
-.print-page th:nth-child(1) { width: 6%; } .print-page th:nth-child(2) { width: 14%; } .print-page th:nth-child(3) { width: 16%; }
-.print-page th:nth-child(4) { width: 22%; } .print-page th:nth-child(5) { width: 34%; } .print-page th:nth-child(6) { width: 8%; }
-.print-page td { vertical-align: top; }
+/* Fixed column widths that add up to 100%, and every cell wraps inside itself, so nothing runs into the next column. */
+.print-page table { min-width: 0; table-layout: fixed; width: 100%; }
+.print-page th:nth-child(1) { width: 6%; } .print-page th:nth-child(2) { width: 15%; } .print-page th:nth-child(3) { width: 13%; }
+.print-page th:nth-child(4) { width: 20%; } .print-page th:nth-child(5) { width: 24%; } .print-page th:nth-child(6) { width: 22%; }
+.print-page th, .print-page td { vertical-align: top; padding: 8px 8px; overflow-wrap: break-word; }
+.print-page td .chip { white-space: normal; flex-wrap: wrap; max-width: 100%; row-gap: 0; column-gap: 4px; border-radius: 10px; padding: 3px 7px; font-size: 11px; }
 .print-page .highlighted, .print-page .reading { font-family: var(--serif); }
+@page { size: A4 portrait; margin: 12mm; }
 @media print {
   body:has(.print-page) .sidebar, body:has(.print-page) .topbar, body:has(.print-page) .banner, .no-print { display: none !important; }
   body:has(.print-page) .shell { grid-template-columns: 1fr; }
+  body:has(.print-page) .content { padding: 0; }
   body { background: #fff; color: #000; font-size: 12px; }
-  .card, .table-wrap { box-shadow: none; break-inside: avoid; }
+  .card { box-shadow: none; break-inside: avoid; }
+  /* The step table may run across pages: never clip it, repeat its header, and keep each row whole. */
+  .print-page .table-wrap { box-shadow: none; overflow: visible; border-radius: 0; }
+  .print-page thead { display: table-header-group; }
+  .print-page tr { break-inside: avoid; }
+  .print-page th, .print-page td, .print-page td .small { font-size: 11px; }
+  .print-page td.reading { font-size: 11.5px !important; }
   a { color: inherit; text-decoration: none; }
 }
 

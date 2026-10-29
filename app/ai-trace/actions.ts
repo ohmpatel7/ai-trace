@@ -32,11 +32,28 @@ export async function resetDemoData(): Promise<void> {
   revalidatePath("/", "layout");
 }
 
+/** A problem the student can act on. Its message is shown in the form as written. */
+class StepError extends Error {}
+
 async function ownEditableSubmission(submissionId: number): Promise<Submission> {
   const viewer = await getViewer();
   const submission = getSubmission(submissionId);
-  if (!submission || submission.student_id !== viewer.id) throw new Error("This is not your submission.");
-  if (submission.status === "submitted") throw new Error("Your work has been submitted, so the AI-use log for it is locked.");
+  if (!submission || submission.student_id !== viewer.id) throw new StepError("This step is not in your log. Reload the page and try again.");
+  if (submission.status === "submitted") throw new StepError("Your work has been submitted, so the AI-use log for it is locked.");
+  return submission;
+}
+
+/**
+ * The viewer's own submission for an assignment, created if needed. The workspace
+ * page can create the row while it renders without saving it to Blob, so on the
+ * hosted site the id the page was given may not exist on the instance that takes
+ * the save. Looking it up by assignment and viewer here avoids trusting that id.
+ */
+async function ownEditableSubmissionFor(assignmentId: number): Promise<Submission> {
+  const viewer = await getViewer();
+  if (viewer.role !== "student") throw new StepError("Only a student can log AI steps.");
+  const submission = getOrCreateSubmission(assignmentId, viewer.id);
+  if (submission.status === "submitted") throw new StepError("Your work has been submitted, so the AI-use log for it is locked.");
   return submission;
 }
 
@@ -50,14 +67,27 @@ function workspaceState(submissionId: number): WorkspaceState {
   return { submission: getSubmission(submissionId)!, iterations: listIterations(submissionId) };
 }
 
+/** Step saves report failure as a value, so the form can show it and keep what the student typed. */
+export type StepResult = { ok: true; state: WorkspaceState } | { ok: false; message: string };
+
+async function asStepResult(run: () => Promise<WorkspaceState>): Promise<StepResult> {
+  try {
+    return { ok: true, state: await run() };
+  } catch (error) {
+    if (error instanceof StepError) return { ok: false, message: error.message };
+    console.error("Step save failed:", error);
+    return { ok: false, message: "The server could not save this just now. Nothing you typed has been lost; please try again." };
+  }
+}
+
 export interface StepInput {
   tool_name: string; prompt: string; ai_output: string; critique: string; action: StepAction; action_note: string; stage: string;
 }
 
 function cleanStep(input: StepInput): StepInput {
-  if (!ACTIONS.includes(input.action)) throw new Error("Unknown action.");
-  if (!input.prompt.trim() || !input.ai_output.trim()) throw new Error("A step needs at least a prompt and the AI output.");
-  if (!input.critique.trim()) throw new Error("Your critique is required.");
+  if (!ACTIONS.includes(input.action)) throw new StepError("Unknown action.");
+  if (!input.prompt.trim() || !input.ai_output.trim()) throw new StepError("A step needs at least a prompt and the AI output.");
+  if (!input.critique.trim()) throw new StepError("Your critique is required. The step was not saved.");
   return {
     tool_name: input.tool_name.trim() || "Unnamed tool",
     prompt: input.prompt.trim(),
@@ -69,50 +99,56 @@ function cleanStep(input: StepInput): StepInput {
   };
 }
 
-export async function createStep(submissionId: number, input: StepInput): Promise<WorkspaceState> {
-  await ownEditableSubmission(submissionId);
-  const step = cleanStep(input);
-  const db = getDb();
-  const seq = (db.prepare("SELECT COALESCE(MAX(seq), 0) + 1 s FROM iterations WHERE submission_id = ?").get(submissionId) as { s: number }).s;
-  const stamp = now();
-  db.prepare(
-    `INSERT INTO iterations (submission_id, seq, tool_name, prompt, ai_output, critique, action, action_note, stage, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(submissionId, seq, step.tool_name, step.prompt, step.ai_output, step.critique, step.action, step.action_note, step.stage, stamp, stamp);
-  // Logging a step means the assignment is under way, even though the work itself is handed in elsewhere.
-  db.prepare("UPDATE submissions SET status = 'in_progress', updated_at = ? WHERE id = ?").run(stamp, submissionId);
-  recomputeAnalysis(db, submissionId);
-  await persistDb();
-  revalidatePath("/ai-trace");
-  return workspaceState(submissionId);
-}
-
-export async function updateStep(submissionId: number, iterationId: number, input: StepInput): Promise<WorkspaceState> {
-  await ownEditableSubmission(submissionId);
-  const step = cleanStep(input);
-  const db = getDb();
-  db.prepare(
-    `UPDATE iterations SET tool_name = ?, prompt = ?, ai_output = ?, critique = ?, action = ?, action_note = ?, stage = ?, updated_at = ?
-     WHERE id = ? AND submission_id = ?`,
-  ).run(step.tool_name, step.prompt, step.ai_output, step.critique, step.action, step.action_note, step.stage, now(), iterationId, submissionId);
-  recomputeAnalysis(db, submissionId);
-  await persistDb();
-  return workspaceState(submissionId);
-}
-
-export async function deleteStep(submissionId: number, iterationId: number): Promise<WorkspaceState> {
-  await ownEditableSubmission(submissionId);
-  const db = getDb();
-  const renumber = db.transaction(() => {
-    db.prepare("DELETE FROM iterations WHERE id = ? AND submission_id = ?").run(iterationId, submissionId);
-    const rest = db.prepare("SELECT id FROM iterations WHERE submission_id = ? ORDER BY seq").all(submissionId) as { id: number }[];
-    rest.forEach((row, index) => db.prepare("UPDATE iterations SET seq = ? WHERE id = ?").run(index + 1, row.id));
+export async function createStep(assignmentId: number, input: StepInput): Promise<StepResult> {
+  return asStepResult(async () => {
+    const { id: submissionId } = await ownEditableSubmissionFor(assignmentId);
+    const step = cleanStep(input);
+    const db = getDb();
+    const seq = (db.prepare("SELECT COALESCE(MAX(seq), 0) + 1 s FROM iterations WHERE submission_id = ?").get(submissionId) as { s: number }).s;
+    const stamp = now();
+    db.prepare(
+      `INSERT INTO iterations (submission_id, seq, tool_name, prompt, ai_output, critique, action, action_note, stage, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ).run(submissionId, seq, step.tool_name, step.prompt, step.ai_output, step.critique, step.action, step.action_note, step.stage, stamp, stamp);
+    // Logging a step means the assignment is under way, even though the work itself is handed in elsewhere.
+    db.prepare("UPDATE submissions SET status = 'in_progress', updated_at = ? WHERE id = ?").run(stamp, submissionId);
+    recomputeAnalysis(db, submissionId);
+    await persistDb();
+    revalidatePath("/ai-trace");
+    return workspaceState(submissionId);
   });
-  renumber();
-  recomputeAnalysis(db, submissionId);
-  await persistDb();
-  revalidatePath("/ai-trace");
-  return workspaceState(submissionId);
+}
+
+export async function updateStep(submissionId: number, iterationId: number, input: StepInput): Promise<StepResult> {
+  return asStepResult(async () => {
+    await ownEditableSubmission(submissionId);
+    const step = cleanStep(input);
+    const db = getDb();
+    db.prepare(
+      `UPDATE iterations SET tool_name = ?, prompt = ?, ai_output = ?, critique = ?, action = ?, action_note = ?, stage = ?, updated_at = ?
+       WHERE id = ? AND submission_id = ?`,
+    ).run(step.tool_name, step.prompt, step.ai_output, step.critique, step.action, step.action_note, step.stage, now(), iterationId, submissionId);
+    recomputeAnalysis(db, submissionId);
+    await persistDb();
+    return workspaceState(submissionId);
+  });
+}
+
+export async function deleteStep(submissionId: number, iterationId: number): Promise<StepResult> {
+  return asStepResult(async () => {
+    await ownEditableSubmission(submissionId);
+    const db = getDb();
+    const renumber = db.transaction(() => {
+      db.prepare("DELETE FROM iterations WHERE id = ? AND submission_id = ?").run(iterationId, submissionId);
+      const rest = db.prepare("SELECT id FROM iterations WHERE submission_id = ? ORDER BY seq").all(submissionId) as { id: number }[];
+      rest.forEach((row, index) => db.prepare("UPDATE iterations SET seq = ? WHERE id = ?").run(index + 1, row.id));
+    });
+    renumber();
+    recomputeAnalysis(db, submissionId);
+    await persistDb();
+    revalidatePath("/ai-trace");
+    return workspaceState(submissionId);
+  });
 }
 
 /**

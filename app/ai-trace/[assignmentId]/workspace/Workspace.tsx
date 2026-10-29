@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { createStep, updateStep, deleteStep, type StepInput, type WorkspaceState } from "@/app/ai-trace/actions";
+import { createStep, updateStep, deleteStep, type StepInput, type StepResult, type WorkspaceState } from "@/app/ai-trace/actions";
 import type { Assignment, Iteration } from "@/lib/types";
 import { ACTION_LABELS } from "@/lib/critique";
 import { formatDateTime, plural } from "@/lib/format";
@@ -17,21 +17,46 @@ export function Workspace({ assignment, initial }: { assignment: Assignment; ini
   const [state, setState] = useState(initial);
   const [dialogStep, setDialogStep] = useState<Iteration | null | "new">(null);
   const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
   const { submission, iterations } = state;
   const locked = submission.status === "submitted";
+
+  /** Runs a save. A failure, including a dropped connection, comes back as a message instead of crashing the page. */
+  async function run(action: () => Promise<StepResult>): Promise<boolean> {
+    let result: StepResult;
+    try {
+      result = await action();
+    } catch {
+      result = { ok: false, message: "The save did not reach the server. Check your connection; nothing you typed has been lost, so try again." };
+    }
+    if (!result.ok) {
+      setError(result.message);
+      return false;
+    }
+    setState(result.state);
+    setError(null);
+    return true;
+  }
 
   function saveStep(input: StepInput) {
     const editing = dialogStep && dialogStep !== "new" ? dialogStep : null;
     startTransition(async () => {
-      const next = editing ? await updateStep(submission.id, editing.id, input) : await createStep(submission.id, input);
-      setState(next);
-      setDialogStep(null);
+      // On failure the dialog stays open with the student's text in it.
+      const saved = await run(() => (editing ? updateStep(submission.id, editing.id, input) : createStep(assignment.id, input)));
+      if (saved) setDialogStep(null);
     });
   }
 
   function removeStep(it: Iteration) {
     if (!window.confirm(`Delete step ${it.seq}? The step and its critique will be removed from your log.`)) return;
-    startTransition(async () => setState(await deleteStep(submission.id, it.id)));
+    startTransition(async () => {
+      await run(() => deleteStep(submission.id, it.id));
+    });
+  }
+
+  function openDialog(step: Iteration | "new" | null) {
+    setError(null);
+    setDialogStep(step);
   }
 
   return (
@@ -49,11 +74,12 @@ export function Workspace({ assignment, initial }: { assignment: Assignment; ini
             )}
           </div>
           {!locked && (
-            <button type="button" className="btn primary" onClick={() => setDialogStep("new")} disabled={pending}>
+            <button type="button" className="btn primary" onClick={() => openDialog("new")} disabled={pending}>
               Log an AI step
             </button>
           )}
         </div>
+        {error && dialogStep === null && <p role="alert" className="field-error" style={{ margin: "8px 0 0" }}>{error}</p>}
         <p className="small muted" style={{ margin: "8px 0 0" }}>
           Each step records the prompt, the AI output, your critique and what you did next. In this prototype you paste each step in; a real deployment would capture them from the AI tool automatically.
         </p>
@@ -77,7 +103,7 @@ export function Workspace({ assignment, initial }: { assignment: Assignment; ini
               {it.action_note && <div><h4>What you did next</h4><p className="reading">{ACTION_LABELS[it.action]}. {it.action_note}</p></div>}
               {!locked && (
                 <div className="actions">
-                  <button type="button" className="btn small" onClick={() => setDialogStep(it)} disabled={pending}>Edit</button>
+                  <button type="button" className="btn small" onClick={() => openDialog(it)} disabled={pending}>Edit</button>
                   <button type="button" className="btn small danger" onClick={() => removeStep(it)} disabled={pending}>Delete</button>
                 </div>
               )}
@@ -87,7 +113,7 @@ export function Workspace({ assignment, initial }: { assignment: Assignment; ini
       </div>
 
       <StepDialog key={dialogStep === "new" ? "new" : dialogStep?.id ?? "closed"} open={dialogStep !== null} step={dialogStep === "new" ? null : dialogStep}
-        onCancel={() => setDialogStep(null)} onSave={saveStep} busy={pending} />
+        onCancel={() => openDialog(null)} onSave={saveStep} busy={pending} error={dialogStep !== null ? error : null} />
     </>
   );
 }
